@@ -27,7 +27,7 @@ public class World {
     }
 
     public static void main(String[] args) {
-        World world = new World(10404, 200, 200);
+        World world = new World((long) (100000 * Math.random()), 80, 40);
         TERenderer ter = new TERenderer();
         ter.initialize(world.WIDTH(), world.HEIGHT());
         world.setup();
@@ -60,7 +60,7 @@ public class World {
     }
 
     private void createHallway(Runner runner) {
-        while (runner.nextStepSafeForHallway() && RANDOM.nextDouble() > 0.1) {
+        while (runner.nextStepSafeForHallway() && runner.stepsTaken() < 1000) {
             runner.nextStepForHallway();
         }
     }
@@ -68,7 +68,7 @@ public class World {
     /* Returns a random position on the screen! */
     private Position randomPosition() {
         /* Not yet implemented! */
-        return new Position(0, 0);
+        return new Position(WIDTH / 2, HEIGHT / 2);
     }
 
     public TETile[][] getGrid() {
@@ -76,23 +76,35 @@ public class World {
     }
 
     private void setTileToWall(Position position) {
-        grid[position.x][position.y] = Tileset.WALL;
+        grid[position.x()][position.y()] = Tileset.WALL;
+        // System.out.println("Tile at " + position.x() + " and " + position.y() + " changed!");
+    }
+
+    private void setTileToFloor(Position position) {
+        grid[position.x()][position.y()] = Tileset.FLOWER;
+        // System.out.println("Tile at " + position.x() + " and " + position.y() + " changed!");
     }
 
     private class Runner {
         private Position position;
         private Position.Step nextStep;
+        private int stepsTaken;
 
         public Runner(Position startPosition) {
             position = startPosition;
-            nextStep = Position.randomSteps()[0];
+            nextStep = randomSteps()[0];
+            stepsTaken = 0;
+        }
+
+        public int stepsTaken() {
+            return stepsTaken;
         }
 
         public boolean nextStepSafeForHallway() {
-            if (RANDOM.nextDouble() > 0.1 && StepSafeForHallway(nextStep)) {
+            if (RANDOM.nextDouble() > 0.05 && StepSafeForHallway(nextStep)) {
                 return true;
             }
-            Position.Step[] possbileSteps = Position.randomSteps();
+            Position.Step[] possbileSteps = randomSteps();
             for (int stepI = 0; stepI < possbileSteps.length; stepI++) {
                 nextStep = possbileSteps[stepI];
                 if (StepSafeForHallway(nextStep)) {
@@ -103,18 +115,42 @@ public class World {
             return false;
         }
 
+        private Position.Step[] randomSteps() {
+            Position.Step[] steps = Position.Steps.clone();
+            RandomUtils.shuffle(RANDOM, steps);
+            return steps;
+        }
+
         /* Determine whether the given step can be implemented! */
         private boolean StepSafeForHallway(Position.Step step) {
             /* Not yet implemented! */
+            if (!validPosition(Position.add(position, step))) {
+                return false;
+            }
             return true;
         }
 
         public void nextStepForHallway() {
             position.add(nextStep);
-            for (int neighborI = 0; neighborI < nextStep.orthogonalSteps.length; neighborI++) {
-                Position neighbor = Position.add(position, nextStep.orthogonalSteps[neighborI]);
-                setTileToWall(neighbor);
+            setTileToFloor(position);
+            stepsTaken++;
+            Position.Step[] orthogonalSteps = nextStep.orthogonalSteps();
+            for (int neighborI = 0; neighborI < orthogonalSteps.length; neighborI++) {
+                Position neighbor = Position.add(position, orthogonalSteps[neighborI]);
+
+                /* Currently we may possibly create hallways that are at the edge of the screen - we should avoid this!
+                As a side consequence, the following if-statement would then be unnecessary. */
+                if (validPosition(neighbor)) {
+                    setTileToWall(neighbor);
+                }
             }
         }
+    }
+
+    private boolean validPosition(Position position) {
+        if (position.x() < 0 || position.x() >= WIDTH || position.y() < 0 || position.y() >= HEIGHT) {
+            return false;
+        }
+        return true;
     }
 }

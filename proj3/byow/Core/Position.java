@@ -23,12 +23,6 @@ class Position {
         return new Position(position.x + step.x, position.y + step.y);
     }
 
-    /* Return an array of all four possible step directions, but in random order! */
-    public static Step[] randomSteps() {
-        /*NOT IMPLEMENTED YET*/
-        return Steps;
-    }
-
     public int x() {
         return x;
     }
@@ -40,22 +34,22 @@ class Position {
     public static class Step {
         public int x;
         public int y;
-        public Step[] orthogonalSteps;
 
-        public Step(int x, int y) {
-            if (!(x == 0 && y != 0) || (x != 0 && y == 0)) {
+        public Step(int stepX, int stepY) {
+            if (!((stepX == 0 && stepY != 0) || (stepX != 0 && stepY == 0))) {
                 throw new IllegalArgumentException("A step has to be parallel to the grid!");
             }
 
-            this.x = x;
-            this.y = y;
+            x = stepX;
+            y = stepY;
+        }
 
-            /* Determine what two steps are orthognal to this step */
-
+        /* Return the two steps that are orthogonal to this step */
+        public Step[] orthogonalSteps() {
             if (this.x == 0) {
-                orthogonalSteps = new Step[]{new Step(-1, 0), new Step(1, 0)};
+                return new Step[]{Left, Right};
             } else {
-                orthogonalSteps = new Step[]{new Step(0, -1), new Step(0, 1)};
+                return new Step[]{Down, Up};
             }
         }
     }
