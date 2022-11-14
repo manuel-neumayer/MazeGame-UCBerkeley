@@ -27,7 +27,7 @@ public class World {
     }
 
     public static void main(String[] args) {
-        World world = new World((long) (100000 * Math.random()), 80, 40);
+        World world = new World((long) (568383956), 80, 40);
         TERenderer ter = new TERenderer();
         ter.initialize(world.WIDTH(), world.HEIGHT());
         world.setup();
@@ -45,12 +45,32 @@ public class World {
 
     public void setup() {
         initializeGrid();
-        Runner runner = new Runner(randomPosition());
-        createHallway(runner);
-
+        Room firstRoom = placeRoom(WIDTH / 2, HEIGHT / 2); // or use randomPosition() ?
+        runFromRoom(firstRoom);
         /*write code*/
     }
 
+    private void createHallwayAndRoom(Position startPosition) {
+        Runner runner = new Runner(startPosition);
+        runner.createHallway(randomCorridorLength());
+        Room newRoom = placeRoom(runner.nextPosition());
+        if (newRoom == null) {
+            runner.closeCorridor();
+        } else {
+            runFromRoom(newRoom);
+        }
+    }
+
+    private void runFromRoom(Room room) {
+        for (int newRunnerI = 0; newRunnerI < room.newCorridors.length; newRunnerI++) {
+            Position newCorridorStartPosition = room.newCorridors[newRunnerI];
+            createHallwayAndRoom(newCorridorStartPosition);
+        }
+    }
+
+    private int randomCorridorLength() {
+        return (int) (20 * Math.random());
+    }
     public int WIDTH() {
         return WIDTH;
     }
@@ -59,11 +79,11 @@ public class World {
         return HEIGHT;
     }
 
-    private void createHallway(Runner runner) {
+    /*private void createHallway(Runner runner) {
         while (runner.nextStepSafeForHallway() && runner.stepsTaken() < 1000) {
             runner.nextStepForHallway();
         }
-    }
+    }*/
 
     /* Returns a random position on the screen! */
     private Position randomPosition() {
@@ -85,34 +105,80 @@ public class World {
         // System.out.println("Tile at " + position.x() + " and " + position.y() + " changed!");
     }
 
+    private boolean isBackgroundTile(TETile tile) {
+        return tile == Tileset.NOTHING;
+    }
+
     private class Runner {
         private Position position;
         private Position.Step nextStep;
+        private boolean justTookTurn;
         private int stepsTaken;
+        private double likelyhoodOfRandomTurn = 0.05;
 
         public Runner(Position startPosition) {
             position = startPosition;
             nextStep = randomSteps()[0];
+            justTookTurn = false;
             stepsTaken = 0;
+        }
+
+        public void createHallway(int maxLength) {
+            while (nextStepSafeForHallway() && stepsTaken < maxLength) {
+                nextStepForHallway();
+            }
+        }
+
+        public Position nextPosition() {
+            return Position.add(position, nextStep);
+        }
+
+        public void closeCorridor() {
+            setTileToWall(position);
         }
 
         public int stepsTaken() {
             return stepsTaken;
         }
 
-        public boolean nextStepSafeForHallway() {
-            if (RANDOM.nextDouble() > 0.05 && StepSafeForHallway(nextStep)) {
-                return true;
+        /* Interacts intimately with nextStepForHallway !!! */
+        private boolean nextStepSafeForHallway() {
+            // if the current nextStep is valid, ...
+            if (StepSafeForHallway(nextStep)) {
+                // ... and the runner does not decide to randomly take a turn...
+                if (!justTookTurn && RANDOM.nextDouble() > likelyhoodOfRandomTurn) {
+                    // this function simply returns true, meaning the runner can go in the directio of nextStep.
+                    return true;
+                }
             }
+            /* Otherwise, the runner is (definitely (*)) going to take a turn. */
+            justTookTurn = true;
+            Position.Step oldNextStep = nextStep;
             Position.Step[] possbileSteps = randomSteps();
             for (int stepI = 0; stepI < possbileSteps.length; stepI++) {
                 nextStep = possbileSteps[stepI];
-                if (StepSafeForHallway(nextStep)) {
+                //here we (also) make sure that the runner really changes direction now
+                if (!nextStep.equals(oldNextStep) && StepSafeForHallway(nextStep)) {
+                    fillThreeTilesBehind(oldNextStep);
                     return true;
                 }
             }
             nextStep = null;
             return false;
+        }
+
+        private void fillThreeTilesBehind(Position.Step direction) {
+            Position behind = Position.add(position, direction);
+            setTileToWall(behind);
+            Position.Step[] orthogonalSteps = direction.orthogonalSteps();
+            for (int neighborI = 0; neighborI < orthogonalSteps.length; neighborI++) {
+                Position neighbor = Position.add(behind, orthogonalSteps[neighborI]);
+                /* Currently we may possibly create hallways that are at the edge of the screen - we should avoid this!
+                As a side consequence, the following if-statement would then be unnecessary. */
+                if (validPosition(neighbor)) {
+                    setTileToWall(neighbor);
+                }
+            }
         }
 
         private Position.Step[] randomSteps() {
@@ -123,14 +189,18 @@ public class World {
 
         /* Determine whether the given step can be implemented! */
         private boolean StepSafeForHallway(Position.Step step) {
-            /* Not yet implemented! */
-            if (!validPosition(Position.add(position, step))) {
+            Position positionPlusTwoSteps = Position.add(position, step).add(step);
+            if (!validPosition(positionPlusTwoSteps)) {
+                return false;
+            }
+            if (!isBackgroundTile(grid[positionPlusTwoSteps.x()][positionPlusTwoSteps.y()])) {
                 return false;
             }
             return true;
         }
 
-        public void nextStepForHallway() {
+        /* Interacts intimately with nextStepSafeForHallway !!! */
+        private void nextStepForHallway() {
             position.add(nextStep);
             setTileToFloor(position);
             stepsTaken++;
@@ -144,6 +214,7 @@ public class World {
                     setTileToWall(neighbor);
                 }
             }
+            justTookTurn = false;
         }
     }
 

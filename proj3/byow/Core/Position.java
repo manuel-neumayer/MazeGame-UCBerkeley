@@ -14,13 +14,18 @@ class Position {
         this.y = y;
     }
 
-    public void add(Step step) {
+    public Position add(Step step) {
         x += step.x;
         y += step.y;
+        return this;
     }
 
     public static Position add(Position position, Step step) {
         return new Position(position.x + step.x, position.y + step.y);
+    }
+
+    public static Position sub(Position position, Step step) {
+        return new Position(position.x - step.x, position.y - step.y);
     }
 
     public int x() {
@@ -42,6 +47,16 @@ class Position {
 
             x = stepX;
             y = stepY;
+        }
+
+        @Override
+        public boolean equals(Object step) {
+            if (step instanceof Step) {
+                if (((Step) step).x == x && ((Step) step).y == y) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /* Return the two steps that are orthogonal to this step */
