@@ -21,12 +21,18 @@ public class Room {
         this.world = world;
         newCorridors = new LinkedList<>();
         this.positions = positions;
+        furnishRoom(positions);
+        walledRoom(positions);
         int[] newCorridorSides = new int[]{0, 1, 2};
         RandomUtils.shuffle(rand, newCorridorSides);
         for (int i = 0; i < 3; i++) {
             addCorridor(newCorridorSides[i]);
         }
-        furnishRoom(positions);
+
+    }
+    private void addWalls(LinkedList<LinkedList<Position>> p) {
+        //top
+
     }
 
     private void addCorridor(int i) {
@@ -51,8 +57,39 @@ public class Room {
             newCorridors.push(newCorridor);
             world.setTileToFloor(newCorridor);
         }
-        furnishRoom(positions);
+
     }
+    private void walledRoom(LinkedList<LinkedList<Position>> p) {
+        TETile[][] g = world.getGrid();
+        // UP
+        LinkedList<Position> y = p.get(0);
+        for (int j = 0; j < y.size(); j++) {
+            Position pos = y.get(j);
+            g[pos.x()][pos.y()] = Tileset.WALL;
+        }
+        //DOWN
+        LinkedList<Position> d = p.get(positions.size() - 1);
+        for (int j = 0; j < d.size(); j++) {
+            Position pos = d.get(j);
+            g[pos.x()][pos.y()] = Tileset.WALL;
+        }
+
+        //LEFT
+        for (int j = 0; j < p.size(); j++) {
+            LinkedList<Position> l = p.get(j);
+            Position pos = l.get(0);
+            g[pos.x()][pos.y()] = Tileset.WALL;
+        }
+
+//LEFT
+        for (int j = 0; j < p.size(); j++) {
+            LinkedList<Position> r = p.get(j);
+            Position pos = r.get(r.size() - 1);
+            g[pos.x()][pos.y()] = Tileset.WALL;
+        }
+
+    }
+
 
     private void furnishRoom(LinkedList<LinkedList<Position>> p) {
         System.out.println("Furnishing a room with dimensions " + p.size() + ", " + p.get(0).size());

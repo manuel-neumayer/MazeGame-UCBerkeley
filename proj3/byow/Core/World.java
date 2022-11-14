@@ -126,6 +126,7 @@ public class World {
         if (newRoom == null) {
             runner.closeCorridor();
         } else {
+            setTileToFloor(runner.nextPosition());
             runFromRoom(newRoom);
         }
     }
