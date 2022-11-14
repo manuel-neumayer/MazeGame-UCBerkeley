@@ -15,15 +15,14 @@ public class Room {
     private World world;
     public LinkedList<Position> newCorridors;
 
-    public Room(LinkedList<LinkedList<Position>> positions, Random rand, World world, double likelihoodOfNewCorridor) {
+    public Room(LinkedList<LinkedList<Position>> positions, Random rand, World world) {
         this.rand = rand;
         this.world = world;
         newCorridors = new LinkedList<>();
         this.positions = positions;
         int[] newCorridorSides = new int[]{0, 1, 2};
         RandomUtils.shuffle(rand, newCorridorSides);
-        int numberOfNewCorridors = 1 + (int) (2 * rand.nextDouble());
-        for (int i = 0; i < numberOfNewCorridors; i++) {
+        for (int i = 0; i < 3; i++) {
             addCorridor(newCorridorSides[i]);
         }
         furnishRoom(positions);
@@ -53,6 +52,7 @@ public class Room {
     }
 
     private void furnishRoom(LinkedList<LinkedList<Position>> p) {
+        System.out.println("Furnishing a room with dimensions " + p.size() + ", " + p.get(0).size());
         TETile[][] g = world.getGrid();
         for (int i = 0; i < p.size(); i++) {
             LinkedList<Position> y = p.get(i);
