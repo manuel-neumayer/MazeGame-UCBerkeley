@@ -11,41 +11,35 @@ public class Room {
     private int length;
     private Random rand;
     private World world;
+    public LinkedList<Position> newCorridors;
 
     public Room(LinkedList<LinkedList<Position>> positions, Random rand, World world) {
         this.rand = rand;
         this.world = world;
-
+        newCorridors = new LinkedList<>();
+        int size = positions.get(0).size();
+        if (rand.nextDouble() < 0.5) {
+            // UP
+            Position newCorridor = positions.get(0).get(size / 4 + (int) ((size / 2) * rand.nextDouble()));
+            newCorridors.push(newCorridor);
+            world.setTileToWall(newCorridor);
+        }
+        if (rand.nextDouble() < 0.5) {
+            // DOWN
+            Position newCorridor = positions.get(positions.size() - 1).get(size / 4 + (int) ((size / 2) * rand.nextDouble()));
+            newCorridors.push(newCorridor);
+            world.setTileToWall(newCorridor);
+        }
+        if (rand.nextDouble() < 0.5) {
+            // UP
+            size = positions.size();
+            Position newCorridor = positions.get(size / 4 + (int) ((size / 2) * rand.nextDouble())).get(positions.get(0).size() - 1);
+            newCorridors.push(newCorridor);
+            world.setTileToFloor(newCorridor);
+        }
     }
 
-    private LinkedList<LinkedList<Position>> getPotentialPositions(Position position, Position.Step direction, int l1, int l2, int w) {
-        LinkedList<LinkedList<Position>> positions = new LinkedList<>();
-        positions.add(rowOfPositions(position, direction, w));
-        Position.Step[] orthogonalDirections = direction.orthogonalSteps();
-        Position currentPosition = position.copy();
-        for (int j = 0; j < l1; j++) {
-            positions.addFirst(rowOfPositions(currentPosition, direction, w));
-            currentPosition.add(orthogonalDirections[0]);
-        }
-        currentPosition = position.copy();
-        for (int j = 0; j < l1; j++) {
-            positions.add(rowOfPositions(currentPosition, direction, w));
-            currentPosition.add(orthogonalDirections[1]);
-        }
-        return positions;
-    }
-
-    private LinkedList<Position> rowOfPositions(Position position, Position.Step direction, int w) {
-        LinkedList<Position> newRow = new LinkedList<>();
-        Position currentPosition = position.copy();
-        for (int i = 0; i < w; i++) {
-            newRow.add(currentPosition);
-            currentPosition.add(direction);
-        }
-        return newRow;
-    }
-
-    public Room makeRoom(Position s){
+        public Room makeRoom(Position s){
         TETile[][] g = world.getGrid();
         int leftCorner = s.x() - (width / 2);
         int rightCorner = s.x() + (width / 2);
@@ -62,7 +56,7 @@ public class Room {
         for (int i = s.y(); i <= s.y() + length; i += 1) {
             g[s.x() + (width / 2)][i] = Tileset.FLOWER;
         }
-
+    return null;
 
     }
     //make a corridor, remove wall and mark it

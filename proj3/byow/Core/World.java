@@ -32,6 +32,9 @@ public class World {
             LinkedList<Position> y = room.get(i);
             for (int j = 0; j < y.size(); j++) {
                 Position pos = y.get(j);
+                if (pos.x() < 0 || pos.x() >= WIDTH || pos.y() < 0 || pos.y() >= HEIGHT) {
+                    return false;
+                }
                 if (grid[pos.x()][pos.y()] != Tileset.NOTHING) {
                     return false;
                 }
@@ -45,12 +48,39 @@ public class World {
             int l1 = 1 + (int) (10 * RANDOM.nextDouble());
             int l2 = 1 + (int) (10 * RANDOM.nextDouble());
             int w = 3 + (int) (20 * RANDOM.nextDouble());
-            LinkedList<LinkedList<Position>> positions = getPositions();
+            LinkedList<LinkedList<Position>> positions = getPotentialPositions(position, direction, l1, l2, w);
             if (roomFits(positions)) {
-                return new Room(positions);
+                return new Room(positions, RANDOM, this);
             }
         }
         return null;
+    }
+
+    private LinkedList<LinkedList<Position>> getPotentialPositions(Position position, Position.Step direction, int l1, int l2, int w) {
+        LinkedList<LinkedList<Position>> positions = new LinkedList<>();
+        positions.add(rowOfPositions(position, direction, w));
+        Position.Step[] orthogonalDirections = direction.orthogonalSteps();
+        Position currentPosition = position.copy();
+        for (int j = 0; j < l1; j++) {
+            positions.addFirst(rowOfPositions(currentPosition, direction, w));
+            currentPosition.add(orthogonalDirections[0]);
+        }
+        currentPosition = position.copy();
+        for (int j = 0; j < l1; j++) {
+            positions.add(rowOfPositions(currentPosition, direction, w));
+            currentPosition.add(orthogonalDirections[1]);
+        }
+        return positions;
+    }
+
+    private LinkedList<Position> rowOfPositions(Position position, Position.Step direction, int w) {
+        LinkedList<Position> newRow = new LinkedList<>();
+        Position currentPosition = position.copy();
+        for (int i = 0; i < w; i++) {
+            newRow.add(currentPosition);
+            currentPosition.add(direction);
+        }
+        return newRow;
     }
 
     public static void main(String[] args) {
@@ -74,7 +104,7 @@ public class World {
 
     public void setup() {
         initializeGrid();
-        Room firstRoom = placeRoom(WIDTH / 2, HEIGHT / 2); // or use randomPosition() ?
+        Room firstRoom = placeRoom(new Position((int) (WIDTH / 2), (int) (HEIGHT / 2)), Position.Up) ; // or use randomPosition() ?
         runFromRoom(firstRoom);
         /*write code*/
     }
@@ -124,12 +154,12 @@ public class World {
         return grid;
     }
 
-    private void setTileToWall(Position position) {
+    public void setTileToWall(Position position) {
         grid[position.x()][position.y()] = Tileset.WALL;
         // System.out.println("Tile at " + position.x() + " and " + position.y() + " changed!");
     }
 
-    private void setTileToFloor(Position position) {
+    public void setTileToFloor(Position position) {
         grid[position.x()][position.y()] = Tileset.FLOWER;
         // System.out.println("Tile at " + position.x() + " and " + position.y() + " changed!");
     }
@@ -170,6 +200,9 @@ public class World {
             return stepsTaken;
         }
 
+        public Position.Step direction() {
+            return nextStep;
+        }
         /* Interacts intimately with nextStepForHallway !!! */
         private boolean nextStepSafeForHallway() {
             // if the current nextStep is valid, ...
