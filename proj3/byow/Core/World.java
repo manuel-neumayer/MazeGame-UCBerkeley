@@ -45,9 +45,9 @@ public class World {
 
     private Room placeRoom(Position position, Position.Step direction) {
         for (int i = 0; i < 100; i++) {
-            int l1 = 1 + (int) (10 * RANDOM.nextDouble());
-            int l2 = 1 + (int) (10 * RANDOM.nextDouble());
-            int w = 3 + (int) (20 * RANDOM.nextDouble());
+            int l1 = 5 + (int) (10 * RANDOM.nextDouble());
+            int l2 = 5 + (int) (10 * RANDOM.nextDouble());
+            int w = 10 + (int) (20 * RANDOM.nextDouble());
             LinkedList<LinkedList<Position>> positions = getPotentialPositions(position, direction, l1, l2, w);
             if (roomFits(positions)) {
                 return new Room(positions, RANDOM, this);
@@ -66,7 +66,7 @@ public class World {
             currentPosition.add(orthogonalDirections[0]);
         }
         currentPosition = position.copy();
-        for (int j = 0; j < l1; j++) {
+        for (int j = 0; j < l2; j++) {
             positions.add(rowOfPositions(currentPosition, direction, w));
             currentPosition.add(orthogonalDirections[1]);
         }
@@ -112,6 +112,10 @@ public class World {
     private void createHallwayAndRoom(Position startPosition) {
         Runner runner = new Runner(startPosition);
         runner.createHallway(randomCorridorLength());
+        if (runner.direction() == null) {
+            runner.closeCorridor();
+            return;
+        }
         Room newRoom = placeRoom(runner.nextPosition(), runner.direction());
         if (newRoom == null) {
             runner.closeCorridor();
@@ -189,6 +193,10 @@ public class World {
         }
 
         public Position nextPosition() {
+            //!! this is weird
+            if (nextStep == null) {
+                return position;
+            }
             return Position.add(position, nextStep);
         }
 

@@ -1,6 +1,7 @@
 package byow.Core;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 
 import byow.TileEngine.TETile;
@@ -36,6 +37,20 @@ public class Room {
             Position newCorridor = positions.get(size / 4 + (int) ((size / 2) * rand.nextDouble())).get(positions.get(0).size() - 1);
             newCorridors.push(newCorridor);
             world.setTileToFloor(newCorridor);
+        }
+        furnishRoom(positions);
+    }
+
+    private void furnishRoom(LinkedList<LinkedList<Position>> p) {
+        TETile[][] g = world.getGrid();
+        for (int i = 0; i < p.size(); i++) {
+            LinkedList<Position> y = p.get(i);
+            for (int j = 0; j < y.size(); j++) {
+                Position pos = y.get(j);
+                if (g[pos.x()][pos.y()] == Tileset.NOTHING) {
+                    g[pos.x()][pos.y()] = Tileset.FLOWER;
+                }
+            }
         }
     }
 
