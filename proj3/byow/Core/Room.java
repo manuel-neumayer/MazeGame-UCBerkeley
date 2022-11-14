@@ -1,4 +1,5 @@
 package byow.Core;
+import java.sql.Array;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -9,33 +10,58 @@ import byow.TileEngine.Tileset;
 public class Room {
     private int width;
     private int length;
+    private LinkedList<LinkedList<Position>> positions;
     private Random rand;
     private World world;
     public LinkedList<Position> newCorridors;
 
-    public Room(LinkedList<LinkedList<Position>> positions, Random rand, World world) {
+    public Room(LinkedList<LinkedList<Position>> positions, Random rand, World world, double likelihoodOfNewCorridor) {
         this.rand = rand;
         this.world = world;
         newCorridors = new LinkedList<>();
+        this.positions = positions;
+        int[] newCorridorSides = new int[]{0, 1, 2};
+        RandomUtils.shuffle(rand, newCorridorSides);
+        int numberOfNewCorridors = 1 + (int) (2 * rand.nextDouble());
+        for (int i = 0; i < numberOfNewCorridors; i++) {
+            addCorridor(newCorridorSides[i]);
+        }
+        furnishRoom(positions);
+    }
+
+    private void addCorridor(int i) {
         int size = positions.get(0).size();
-        if (rand.nextDouble() < 0.5) {
+        if (i == 0) {
             // UP
             Position newCorridor = positions.get(0).get(size / 4 + (int) ((size / 2) * rand.nextDouble()));
             newCorridors.push(newCorridor);
             world.setTileToWall(newCorridor);
         }
-        if (rand.nextDouble() < 0.5) {
+        if (i == 1) {
             // DOWN
             Position newCorridor = positions.get(positions.size() - 1).get(size / 4 + (int) ((size / 2) * rand.nextDouble()));
             newCorridors.push(newCorridor);
             world.setTileToWall(newCorridor);
         }
-        if (rand.nextDouble() < 0.5) {
-            // UP
+        if (i == 2) {
+            // RIGHT
             size = positions.size();
             Position newCorridor = positions.get(size / 4 + (int) ((size / 2) * rand.nextDouble())).get(positions.get(0).size() - 1);
             newCorridors.push(newCorridor);
             world.setTileToFloor(newCorridor);
+        }
+    }
+
+    private void furnishRoom(LinkedList<LinkedList<Position>> p) {
+        TETile[][] g = world.getGrid();
+        for (int i = 0; i < p.size(); i++) {
+            LinkedList<Position> y = p.get(i);
+            for (int j = 0; j < y.size(); j++) {
+                Position pos = y.get(j);
+                if (g[pos.x()][pos.y()] == Tileset.NOTHING) {
+                    g[pos.x()][pos.y()] = Tileset.FLOWER;
+                }
+            }
         }
     }
 

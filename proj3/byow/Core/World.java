@@ -15,16 +15,27 @@ public class World {
     private int WIDTH;
     private int HEIGHT;
 
-    private long SEED = 2873123;
+    private long SEED;
     private Random RANDOM;
 
     private TETile[][] grid;
+    private LinkedList<Room> rooms;
+
+    public static void main(String[] args) {
+        World world = new World((long) (Math.random() * 100000), 80, 40);
+        TERenderer ter = new TERenderer();
+        ter.initialize(world.WIDTH(), world.HEIGHT());
+        world.setup();
+        ter.renderFrame(world.getGrid());
+    }
+
 
     public World(long seed, int width, int height) {
         WIDTH = width;
         HEIGHT = height;
         SEED = seed;
         RANDOM = new Random(seed);
+        rooms = new LinkedList<>();
     }
 
     public boolean roomFits(LinkedList<LinkedList<Position>> room){
@@ -43,14 +54,14 @@ public class World {
         return true;
     }
 
-    private Room placeRoom(Position position, Position.Step direction) {
+    private Room placeRoom(Position position, Position.Step direction, double likelihoodOfNewCorridor) {
         for (int i = 0; i < 100; i++) {
             int l1 = 1 + (int) (10 * RANDOM.nextDouble());
             int l2 = 1 + (int) (10 * RANDOM.nextDouble());
             int w = 3 + (int) (20 * RANDOM.nextDouble());
             LinkedList<LinkedList<Position>> positions = getPotentialPositions(position, direction, l1, l2, w);
             if (roomFits(positions)) {
-                return new Room(positions, RANDOM, this);
+                return new Room(positions, RANDOM, this, likelihoodOfNewCorridor);
             }
         }
         return null;
@@ -83,15 +94,7 @@ public class World {
         return newRow;
     }
 
-    public static void main(String[] args) {
-        World world = new World((long) (568383956), 80, 40);
-        TERenderer ter = new TERenderer();
-        ter.initialize(world.WIDTH(), world.HEIGHT());
-        world.setup();
-        ter.renderFrame(world.getGrid());
-    }
-
-    private void initializeGrid() {
+       private void initializeGrid() {
         grid = new TETile[WIDTH][HEIGHT];
         for (int i = 0; i < WIDTH; i++) {
             for (int j = 0; j < HEIGHT; j++) {
@@ -100,34 +103,36 @@ public class World {
         }
     }
 
-
-
     public void setup() {
         initializeGrid();
-        Room firstRoom = placeRoom(new Position((int) (WIDTH / 2), (int) (HEIGHT / 2)), Position.Up) ; // or use randomPosition() ?
+        Room firstRoom = placeRoom(new Position((int) (WIDTH / 2), (int) (HEIGHT / 2)), Position.Up, 1);
+        rooms.add(firstRoom);
         runFromRoom(firstRoom);
         /*write code*/
+    }
+
+    private void runFromRoom(Room room) {
+        System.out.println("Will let " + room.newCorridors.size() + " runners from from a new room!");
+        for (int newRunnerI = 0; newRunnerI < room.newCorridors.size(); newRunnerI++) {
+            Position newCorridorStartPosition = room.newCorridors.get(newRunnerI);
+            System.out.println("Letting Runner run from " + newCorridorStartPosition.x() + ", " + newCorridorStartPosition.y());
+            createHallwayAndRoom(newCorridorStartPosition);
+        }
     }
 
     private void createHallwayAndRoom(Position startPosition) {
         Runner runner = new Runner(startPosition);
         runner.createHallway(randomCorridorLength());
-        Room newRoom = placeRoom(runner.nextPosition(), runner.direction());
+        Room newRoom = placeRoom(runner.nextPosition(), runner.direction(), 0.66);
         if (newRoom == null) {
             runner.closeCorridor();
         } else {
+            rooms.add(newRoom);
             runFromRoom(newRoom);
         }
     }
 
-    private void runFromRoom(Room room) {
-        for (int newRunnerI = 0; newRunnerI < room.newCorridors.size(); newRunnerI++) {
-            Position newCorridorStartPosition = room.newCorridors.get(newRunnerI);
-            createHallwayAndRoom(newCorridorStartPosition);
-        }
-    }
-
-    private int randomCorridorLength() {
+        private int randomCorridorLength() {
         return (int) (20 * RANDOM.nextDouble());
     }
     public int WIDTH() {
