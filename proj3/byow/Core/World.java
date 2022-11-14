@@ -7,6 +7,7 @@ import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Random;
 
 public class World {
@@ -26,6 +27,32 @@ public class World {
         RANDOM = new Random(seed);
     }
 
+    public boolean roomFits(LinkedList<LinkedList<Position>> room){
+        for (int i = 0; i < room.size(); i++) {
+            LinkedList<Position> y = room.get(i);
+            for (int j = 0; j < y.size(); j++) {
+                Position pos = y.get(j);
+                if (grid[pos.x()][pos.y()] != Tileset.NOTHING) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private Room placeRoom(Position position, Position.Step direction) {
+        for (int i = 0; i < 100; i++) {
+            int l1 = 1 + (int) (10 * RANDOM.nextDouble());
+            int l2 = 1 + (int) (10 * RANDOM.nextDouble());
+            int w = 3 + (int) (20 * RANDOM.nextDouble());
+            LinkedList<LinkedList<Position>> positions = getPositions();
+            if (roomFits(positions)) {
+                return new Room(positions);
+            }
+        }
+        return null;
+    }
+
     public static void main(String[] args) {
         World world = new World((long) (568383956), 80, 40);
         TERenderer ter = new TERenderer();
@@ -43,6 +70,8 @@ public class World {
         }
     }
 
+
+
     public void setup() {
         initializeGrid();
         Room firstRoom = placeRoom(WIDTH / 2, HEIGHT / 2); // or use randomPosition() ?
@@ -53,7 +82,7 @@ public class World {
     private void createHallwayAndRoom(Position startPosition) {
         Runner runner = new Runner(startPosition);
         runner.createHallway(randomCorridorLength());
-        Room newRoom = placeRoom(runner.nextPosition());
+        Room newRoom = placeRoom(runner.nextPosition(), runner.direction());
         if (newRoom == null) {
             runner.closeCorridor();
         } else {
