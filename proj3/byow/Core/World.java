@@ -20,9 +20,9 @@ public class World {
 
     private TETile[][] grid;
 
-    private final int minL1 = 5;
-    private final int minL2 = 5;
-    private final int minW = 10;
+    private final int minL1 = 3;
+    private final int minL2 = 3;
+    private final int minW = 5;
 
     public World(long seed, int width, int height) {
         WIDTH = width;
@@ -32,7 +32,9 @@ public class World {
     }
 
     public static void main(String[] args) {
-        World world = new World((long) (100000 * Math.random()), 80, 40);
+        long seed = (long) (100000 * Math.random());
+        System.out.println("Seed: " + seed);
+        World world = new World(seed, 80, 40);
         TERenderer ter = new TERenderer();
         ter.initialize(world.WIDTH(), world.HEIGHT());
         world.setup();
@@ -57,9 +59,9 @@ public class World {
 
     private Room placeRoom(Position position, Position.Step direction) {
         for (int i = 0; i < 100; i++) {
-            int l1 = minL1 + (int) (10 * RANDOM.nextDouble());
-            int l2 = minL2 + (int) (10 * RANDOM.nextDouble());
-            int w = minW + (int) (20 * RANDOM.nextDouble());
+            int l1 = minL1 + (int) (5 * RANDOM.nextDouble());
+            int l2 = minL2 + (int) (5 * RANDOM.nextDouble());
+            int w = minW + (int) (10 * RANDOM.nextDouble());
             LinkedList<LinkedList<Position>> positions = getPotentialPositions(position, direction, l1, l2, w);
             if (roomFits(positions)) {
                 return new Room(positions, RANDOM, this);
@@ -129,6 +131,7 @@ public class World {
     }
 
     private void runFromRoom(Room room) {
+        System.out.println("Sending " + room.newCorridors.size() + " runners to run!");
         for (int newRunnerI = 0; newRunnerI < room.newCorridors.size(); newRunnerI++) {
             Position newCorridorStartPosition = room.newCorridors.get(newRunnerI);
             createHallwayAndRoom(newCorridorStartPosition);
@@ -136,7 +139,7 @@ public class World {
     }
 
     private int randomCorridorLength() {
-        return (int) (20 * RANDOM.nextDouble());
+        return 4 + (int) (20 * RANDOM.nextDouble());
     }
     public int WIDTH() {
         return WIDTH;
@@ -168,16 +171,27 @@ public class World {
         return tile == Tileset.NOTHING;
     }
 
+    private boolean isFloorTile(TETile tile) {
+        return tile == Tileset.FLOWER;
+    }
+
     private class Runner {
         private Position position;
         private Position.Step nextStep;
         private boolean justTookTurn;
         private int stepsTaken;
-        private double likelyhoodOfRandomTurn = 0.05;
+        private double likelyhoodOfRandomTurn = 0.05; // could make this increase with stepsTaken!!
 
         public Runner(Position startPosition) {
             position = startPosition;
-            nextStep = randomSteps()[0];
+            nextStep = null;
+            Position.Step[] possibleSteps = randomSteps();
+            for (int i = 0; i < possibleSteps.length; i++) {
+                if (StepSafeForHallway(possibleSteps[i])) {
+                    nextStep = possibleSteps[i];
+                    break;
+                }
+            }
             justTookTurn = false;
             stepsTaken = 0;
         }
@@ -197,7 +211,9 @@ public class World {
         }
 
         public void closeCorridor() {
-            setTileToWall(position);
+            //if (isBackgroundTile(grid[position.x()][position.y()])) {
+                setTileToWall(position);
+            //}
         }
 
         public int stepsTaken() {
@@ -209,6 +225,9 @@ public class World {
         }
         /* Interacts intimately with nextStepForHallway !!! */
         private boolean nextStepSafeForHallway() {
+            if (nextStep == null) {
+                return false;
+            }
             // if the current nextStep is valid, ...
             if (StepSafeForHallway(nextStep)) {
                 // ... and the runner does not decide to randomly take a turn...
@@ -216,6 +235,13 @@ public class World {
                     // this function simply returns true, meaning the runner can go in the directio of nextStep.
                     return true;
                 }
+            }
+            /* Otherwise, check if you can merge the corridor with another corridor / room */
+            Position posTwoInFront = Position.add(position, nextStep).add(nextStep);
+            if (validPosition(posTwoInFront) && isFloorTile(grid[posTwoInFront.x()][posTwoInFront.y()])) {
+                position.add(nextStep);
+                setTileToFloor(position);
+                return false;
             }
             /* Otherwise, the runner is (definitely (*)) going to take a turn. */
             justTookTurn = true;
@@ -255,6 +281,9 @@ public class World {
 
         /* Determine whether the given step can be implemented! */
         private boolean StepSafeForHallway(Position.Step step) {
+            if (step == null) {
+                return false;
+            }
             Position positionPlusTwoSteps = Position.add(position, step).add(step);
             if (!validPosition(positionPlusTwoSteps)) {
                 return false;

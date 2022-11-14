@@ -2,6 +2,7 @@ package byow.Core;
 import java.sql.Array;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 
 import byow.TileEngine.TETile;
@@ -29,26 +30,28 @@ public class Room {
     }
 
     private void addCorridor(int i) {
-        int size = positions.get(0).size();
         if (i == 0) {
             // UP
+            int size = positions.get(0).size();
             Position newCorridor = positions.get(0).get(size / 4 + (int) ((size / 2) * rand.nextDouble()));
             newCorridors.push(newCorridor);
-            world.setTileToWall(newCorridor);
+            world.setTileToFloor(newCorridor);
         }
         if (i == 1) {
             // DOWN
+            int size = positions.get(0).size();
             Position newCorridor = positions.get(positions.size() - 1).get(size / 4 + (int) ((size / 2) * rand.nextDouble()));
             newCorridors.push(newCorridor);
-            world.setTileToWall(newCorridor);
+            world.setTileToFloor(newCorridor);
         }
         if (i == 2) {
             // RIGHT
-            size = positions.size();
+            int size = positions.size();
             Position newCorridor = positions.get(size / 4 + (int) ((size / 2) * rand.nextDouble())).get(positions.get(0).size() - 1);
             newCorridors.push(newCorridor);
             world.setTileToFloor(newCorridor);
         }
+        furnishRoom(positions);
     }
 
     private void furnishRoom(LinkedList<LinkedList<Position>> p) {
