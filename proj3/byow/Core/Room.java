@@ -1,6 +1,4 @@
 package byow.Core;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -13,8 +11,12 @@ public class Room {
     private int length;
     private Random rand;
     private World world;
-    public boolean hasBeenPlaced;
-    public ArrayList<Position> newCorridors;
+
+    public Room(LinkedList<LinkedList<Position>> positions, Random rand, World world) {
+        this.rand = rand;
+        this.world = world;
+
+    }
 
     private LinkedList<LinkedList<Position>> getPotentialPositions(Position position, Position.Step direction, int l1, int l2, int w) {
         LinkedList<LinkedList<Position>> positions = new LinkedList<>();
@@ -43,9 +45,27 @@ public class Room {
         return newRow;
     }
 
-    public Room(Position position, Long seed, World world) {
-        
+    public Room makeRoom(Position s){
+        TETile[][] g = world.getGrid();
+        int leftCorner = s.x() - (width / 2);
+        int rightCorner = s.x() + (width / 2);
+        //width
+        for (int i = leftCorner ; i <= rightCorner ; i += 1) {
+            g[i][s.y()] = Tileset.FLOWER;
+        }
+        for (int i = s.x() -(width / 2) ; i <= s.x() + (width / 2); i += 1) {
+            g[i][s.y() + length] = Tileset.FLOWER;
+        }
+        for (int i = s.y(); i <= s.y() + length; i += 1) {
+            g[s.x() - (width / 2)][i] = Tileset.FLOWER;
+        }
+        for (int i = s.y(); i <= s.y() + length; i += 1) {
+            g[s.x() + (width / 2)][i] = Tileset.FLOWER;
+        }
+
+
     }
+    //make a corridor, remove wall and mark it
     private int giveGoodWidth(Long seed, Position p){
         int w = 0;
         for (int i = 0; i < 100; i += 1) {
@@ -56,7 +76,7 @@ public class Room {
             }
         }
         return w;
-        
+
 
     }
     private int giveGoodLen(Long seed, Position p){
@@ -73,9 +93,7 @@ public class Room {
 
     }
 
-    public void makeRoom(Tileset tile, Position position, Long seed){
 
-    }
     private int randomizeSize(Long seed){
         int result = rand.nextInt();
         while (result == 0) {
