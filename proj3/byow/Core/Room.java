@@ -1,4 +1,7 @@
 package byow.Core;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Random;
 
 
@@ -10,24 +13,39 @@ public class Room {
     private int length;
     private Random rand;
     private World world;
+    public boolean hasBeenPlaced;
+    public ArrayList<Position> newCorridors;
 
+    private LinkedList<LinkedList<Position>> getPotentialPositions(Position position, Position.Step direction, int l1, int l2, int w) {
+        LinkedList<LinkedList<Position>> positions = new LinkedList<>();
+        positions.add(rowOfPositions(position, direction, w));
+        Position.Step[] orthogonalDirections = direction.orthogonalSteps();
+        Position currentPosition = position.copy();
+        for (int j = 0; j < l1; j++) {
+            positions.addFirst(rowOfPositions(currentPosition, direction, w));
+            currentPosition.add(orthogonalDirections[0]);
+        }
+        currentPosition = position.copy();
+        for (int j = 0; j < l1; j++) {
+            positions.add(rowOfPositions(currentPosition, direction, w));
+            currentPosition.add(orthogonalDirections[1]);
+        }
+        return positions;
+    }
 
+    private LinkedList<Position> rowOfPositions(Position position, Position.Step direction, int w) {
+        LinkedList<Position> newRow = new LinkedList<>();
+        Position currentPosition = position.copy();
+        for (int i = 0; i < w; i++) {
+            newRow.add(currentPosition);
+            currentPosition.add(direction);
+        }
+        return newRow;
+    }
 
     public Room(Position position, Long seed, World world) {
-        this.rand = new Random(seed);
-        this.world = world;
-        Object trialL = giveGoodLen(seed, position)
-        Object trialW = giveGoodWidth(seed, position);
-        if (trialW != null) {
-            width = (int) trialW;
-        }
-        if (trialL != null) {
-            length = (int) trialW;
-        }
-
         
     }
-    //make a corridor, remove wall and mark it
     private int giveGoodWidth(Long seed, Position p){
         int w = 0;
         for (int i = 0; i < 100; i += 1) {

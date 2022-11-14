@@ -36,6 +36,10 @@ class Position {
         return y;
     }
 
+    public Position copy() {
+        return new Position(x, y);
+    }
+
     public static class Step {
         public int x;
         public int y;

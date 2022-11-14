@@ -62,14 +62,14 @@ public class World {
     }
 
     private void runFromRoom(Room room) {
-        for (int newRunnerI = 0; newRunnerI < room.newCorridors.length; newRunnerI++) {
-            Position newCorridorStartPosition = room.newCorridors[newRunnerI];
+        for (int newRunnerI = 0; newRunnerI < room.newCorridors.size(); newRunnerI++) {
+            Position newCorridorStartPosition = room.newCorridors.get(newRunnerI);
             createHallwayAndRoom(newCorridorStartPosition);
         }
     }
 
     private int randomCorridorLength() {
-        return (int) (20 * Math.random());
+        return (int) (20 * RANDOM.nextDouble());
     }
     public int WIDTH() {
         return WIDTH;
