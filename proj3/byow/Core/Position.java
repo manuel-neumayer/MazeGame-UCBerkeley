@@ -63,6 +63,14 @@ class Position {
             return false;
         }
 
+        public Position.Step inverse() {
+            if (x == 0) {
+                return new Step(0, -y);
+            } else {
+                return new Step(-x, 0);
+            }
+        }
+
         /* Return the two steps that are orthogonal to this step */
         public Step[] orthogonalSteps() {
             if (this.x == 0) {
