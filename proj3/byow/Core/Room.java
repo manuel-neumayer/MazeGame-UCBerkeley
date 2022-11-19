@@ -62,28 +62,27 @@ public class Room {
         if (i == 0) {
             // UP
             int size = positions.get(0).size();
-            Position newCorridor = positions.get(0).get(1 + (int) ((size - 2) * rand.nextDouble())); // size / 4 + (int) ((size / 2) * rand.nextDouble()));
+            Position newCorridor = positions.get(0).get(1 + (int) ((size - 3) * rand.nextDouble())); // size / 4 + (int) ((size / 2) * rand.nextDouble()));
             newCorridors.push(newCorridor);
             world.setTileToFloor(newCorridor);
         }
         if (i == 1) {
             // DOWN
             int size = positions.get(0).size();
-            Position newCorridor = positions.get(positions.size() - 1).get(1 + (int) ((size - 2) * rand.nextDouble())); // size / 4 + (int) ((size / 2) * rand.nextDouble()));
+            Position newCorridor = positions.get(positions.size() - 1).get(1 + (int) ((size - 3) * rand.nextDouble())); // size / 4 + (int) ((size / 2) * rand.nextDouble()));
             newCorridors.push(newCorridor);
             world.setTileToFloor(newCorridor);
         }
         if (i == 2) {
             // RIGHT
             int size = positions.size();
-            Position newCorridor = positions.get(1 + (int) ((size - 2) * rand.nextDouble())).get(positions.get(0).size() - 1);; // size / 4 + (int) ((size / 2) * rand.nextDouble())).get(positions.get(0).size() - 1);
+            Position newCorridor = positions.get(1 + (int) ((size - 3) * rand.nextDouble())).get(positions.get(0).size() - 1);; // size / 4 + (int) ((size / 2) * rand.nextDouble())).get(positions.get(0).size() - 1);
             newCorridors.push(newCorridor);
             world.setTileToFloor(newCorridor);
         }
     }
 
     private void furnishRoom(LinkedList<LinkedList<Position>> p) {
-        System.out.println("Furnishing a room with dimensions " + p.size() + ", " + p.get(0).size());
         TETile[][] g = world.getGrid();
         for (int i = 0; i < p.size(); i++) {
             LinkedList<Position> y = p.get(i);

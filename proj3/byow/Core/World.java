@@ -19,15 +19,29 @@ public class World {
     private long SEED;
     private Random RANDOM;
 
+    private double randomTurnProbability = 0.35;
     private TETile[][] grid;
 
     private TERenderer ter;
 
-    private final int minL = 3;//5; //3;
-    private final int randomComponentL = 10;//5; //3;
-    private final int minW = 5;//10; //5;
-    private final int randomComponentW = 20;
+    private final int minL = 3;//1;//5; //3;
+    private final int randomComponentL = 5;//10; //3;
+    private final int minW = 5;//3;//10;//5;
+    private final int randomComponentW = 10; //20
 
+    private final int corridorLengthMin = 4;
+
+    private final int corridorLengthRandomComponent = 6;
+
+    private int pauseTime;
+
+    /* Potential improvement: Have a list of possible starting positions for runners which we constantly add to (as runners run and rooms are placed),
+    and let runners start from this list once the first build is done. */
+
+    /* Also, count number of rooms, and require that at least a given number of rooms is created (15?) */
+
+    /* Another potential metric, besides counting created rooms, is using a heuristic to guess how many rooms could still be placed after the algorithm finished.
+    * I.e., place 100 rooms of reasonable size randomly and see how many could actually be placed. The larger the number, the more work is to be done. */
     public World(long seed, int width, int height) {
         WIDTH = width;
         HEIGHT = height;
@@ -37,13 +51,36 @@ public class World {
 
     public static void main(String[] args) {
         long seed = (long) (100000 * Math.random());
-        //long seed = 58822;//70175;// 56315; 64198
+        //long seed = 83896;//87929; //58822;//70175;// 56315; 64198
         System.out.println("Seed: " + seed);
-        World world = new World(seed, 80, 40);
+        World world = new World(seed, 90, 45);
         world.setup();
     }
 
-    public boolean roomFits(LinkedList<LinkedList<Position>> room){
+    public void setup() {
+        pauseTime = 0;
+        ter = new TERenderer();
+        ter.initialize(WIDTH, HEIGHT);
+        boolean notGoodEnough = true;
+        while (notGoodEnough) {
+            initializeGrid();
+            Room firstRoom = placeRoom(new Position((int) (WIDTH / 2), (int) (HEIGHT / 2)), Position.Up);
+            runFromRoom(firstRoom);
+            ter.renderFrame(getGrid());
+            notGoodEnough = false;
+            for (int i = 0; i < 5; i++) {
+                int heuristic = heuristicForEmptinessOfGrid();
+                System.out.print(heuristic + ", ");
+                if (heuristic >= 20) {
+                    notGoodEnough = true;
+                }
+            }
+            System.out.println("");
+            StdDraw.pause(1000);
+        }
+    }
+
+    private boolean roomFits(LinkedList<LinkedList<Position>> room){
         for (int i = 0; i < room.size(); i++) {
             LinkedList<Position> y = room.get(i);
             for (int j = 0; j < y.size(); j++) {
@@ -60,22 +97,43 @@ public class World {
     }
 
     private Room placeRoom(Position position, Position.Step direction) {
+        LinkedList<LinkedList<Position>> positions;
         for (int i = 0; i < 100; i++) {
-            int l1 = minL + (int) (randomComponentL * RANDOM.nextDouble());
-            int l2 = minL + (int) (randomComponentL * RANDOM.nextDouble());
-            int w = minW + (int) (randomComponentW * RANDOM.nextDouble());
-            LinkedList<LinkedList<Position>> positions = getPotentialPositions(position, direction, l1, l2, w);
+            positions = roomOfRandomDimensions(position, direction);
             if (roomFits(positions)) {
                 return new Room(positions, RANDOM, this);
             }
         }
-        LinkedList<LinkedList<Position>> positions = getPotentialPositions(position, direction, 1, 1, 3);
+        positions = getPotentialPositions(position, direction, 1, 1, 3);
         if (roomFits(positions)) {
             return new Room(positions, RANDOM, this);
         }
         return null;
     }
 
+    private LinkedList<LinkedList<Position>> roomOfRandomDimensions(Position position, Position.Step direction) {
+        int l1 = minL + (int) (randomComponentL * RANDOM.nextDouble());
+        int l2 = minL + (int) (randomComponentL * RANDOM.nextDouble());
+        int w = minW + (int) (randomComponentW * RANDOM.nextDouble());
+        return getPotentialPositions(position, direction, l1, l2, w);
+    }
+
+    private int heuristicForEmptinessOfGrid() {
+        int potentialRooms = 0;
+        for (int i = 0; i < 1000; i++) {
+            Position position = randomPosition();
+            Position.Step direction = randomStep();
+            LinkedList<LinkedList<Position>> positions = roomOfRandomDimensions(position, direction);
+            if (roomFits(positions)) {
+                potentialRooms++;
+            }
+        }
+        return potentialRooms;
+    }
+
+    private Position.Step randomStep() {
+        return Position.Steps[(int) (Position.Steps.length * RANDOM.nextDouble())];
+    }
     private LinkedList<LinkedList<Position>> getPotentialPositions(Position position, Position.Step direction, int l1, int l2, int w) {
         LinkedList<LinkedList<Position>> positions = new LinkedList<>();
         positions.add(rowOfPositions(position, direction, w));
@@ -90,7 +148,6 @@ public class World {
             currentPosition.add(orthogonalDirections[1]);
             positions.add(rowOfPositions(currentPosition, direction, w));
         }
-        //System.out.println("l1: " + l1 + ", l2:" + l2 + ", w: " + w + ", dim:" + positions.size() + ", " + positions.get(0).size());
         return positions;
     }
 
@@ -113,29 +170,15 @@ public class World {
         }
     }
 
-    public void setup() {
-        ter = new TERenderer();
-        ter.initialize(WIDTH, HEIGHT);
-        initializeGrid();
-        Room firstRoom = placeRoom(new Position((int) (WIDTH / 2), (int) (HEIGHT / 2)), Position.Up) ; // or use randomPosition() ?
-        runFromRoom(firstRoom);
-        ter.renderFrame(getGrid());
-        /*for (int i = 0; i < 10; i++) {
-            Runner runner = new Runner(randomPosition());
-            runner.createHallway(1000);
-        }*/
-    }
-
     private void createHallwayAndRoom(Position startPosition, int iteration) {
         Runner runner = new Runner(startPosition);
         runner.createHallway(randomCorridorLength());
         if (runner.deadend() == true || runner.merged() == true) {
             return;
         }
-        Room newRoom = placeRoom(runner.nextPosition(), runner.direction()); // make sure that runner.dirction() is not null if !(runner.deadend() == true || runner.merged() == true)
-        ter.renderFrame(getGrid());
+        Room newRoom = placeRoom(runner.nextPosition(), runner.direction()); // make sure that runner.direction() is not null if !(runner.deadend() == true || runner.merged() == true)
         if (newRoom == null) {
-            if (iteration < 0) {
+            if (iteration < 5) {
                 createHallwayAndRoom(runner.position(), iteration + 1); // will just keep running!!
             } else {
                 runner.closeCorridor(runner.position(), runner.direction());
@@ -147,7 +190,6 @@ public class World {
     }
 
     private void runFromRoom(Room room) {
-        System.out.println("Sending " + room.newCorridors.size() + " runners to run!");
         for (int newRunnerI = 0; newRunnerI < room.newCorridors.size(); newRunnerI++) {
             Position newCorridorStartPosition = room.newCorridors.get(newRunnerI);
             createHallwayAndRoom(newCorridorStartPosition, 0);
@@ -155,7 +197,7 @@ public class World {
     }
 
     private int randomCorridorLength() {
-        return 4 + (int) (10 * RANDOM.nextDouble());
+        return corridorLengthMin + (int) (corridorLengthRandomComponent * RANDOM.nextDouble());
     }
     public int WIDTH() {
         return WIDTH;
@@ -167,10 +209,9 @@ public class World {
 
     /* Returns a random position on the screen! */
     private Position randomPosition() {
-        /* Not yet implemented! */
-        Position pos = new Position(WIDTH / 4 + (int) (RANDOM.nextDouble() * WIDTH / 2), HEIGHT / 4 + (int) (RANDOM.nextDouble() * HEIGHT / 2));
+        Position pos = new Position((int) (RANDOM.nextDouble() * WIDTH), (int) (RANDOM.nextDouble() * HEIGHT));
         while (!isBackground(pos)) {
-            pos = new Position(WIDTH / 4 + (int) (RANDOM.nextDouble() * WIDTH / 2), HEIGHT / 4 + (int) (RANDOM.nextDouble() * HEIGHT / 2));
+            pos = new Position((int) (RANDOM.nextDouble() * WIDTH), (int) (RANDOM.nextDouble() * HEIGHT));
         }
         return pos;
     }
@@ -186,7 +227,7 @@ public class World {
         private boolean deadend;
         private boolean merged;
         private int stepsTaken;
-        private double likelyhoodOfRandomTurn = 0.25; // could make this increase with stepsTaken!!
+        private double likelyhoodOfRandomTurn = randomTurnProbability; // could make this increase with stepsTaken!!
 
         public Runner(Position startPosition) {
             position = startPosition;
@@ -213,8 +254,10 @@ public class World {
                 //closeCorridor(position, currentDirection);
             }
             while (stepsTaken < maxLength) {
-                ter.renderFrame(getGrid());
-                StdDraw.pause(10);
+                if (pauseTime != 0) {
+                    ter.renderFrame(getGrid());
+                    StdDraw.pause(pauseTime);
+                }
                 // nextStep shall never be null if keepRunning is true!
                 if (isMerge(position, currentDirection)) {
                     merge(currentDirection);
@@ -285,13 +328,20 @@ public class World {
         private void merge(Position.Step step) {
             drawOrthogonalWalls(position, step);
             position.add(step);
+            drawOrthogonalWalls(position, step); // this method call ...
             setTileToFloor(position);
+            drawOrthogonalWalls(Position.add(position, step), step); // and this method call are to ensure that even in very weird merges (for example,
+            // see what happens if you remove these method calls and run with seed 83896) no floor is exposed to nothingness. Since
+            // drawOrthogonalWalls(position, step) sets tiles to wall only if they are not already floor, nothing can really go wrong (I hope).
         }
 
         private void drawOrthogonalWalls(Position pos, Position.Step step) {
             Position.Step[] orthogonalSteps = step.orthogonalSteps();
             for (int i = 0; i < orthogonalSteps.length; i++) {
-                setTileToWall(Position.add(pos, orthogonalSteps[i]));
+                Position newWallPosition = Position.add(pos, orthogonalSteps[i]);
+                if (!isFloor(newWallPosition)) {
+                    setTileToWall(newWallPosition);
+                }
             }
         }
 
@@ -325,6 +375,9 @@ public class World {
                 if (isInwardDirection(directions[i])) {
                     return directions[i].inverse();
                 }
+                //if (validStep(position, directions[i])) {
+                //    return directions[i];
+                //}
             }
             return null;
         }
@@ -408,12 +461,6 @@ public class World {
             setTileToWall(endPosition);
         }
 
-        private Position.Step[] randomSteps() {
-            Position.Step[] steps = Position.Steps.clone();
-            RandomUtils.shuffle(RANDOM, steps);
-            return steps;
-        }
-
         public Position nextPosition() {
             return Position.add(position, nextStep);
         }
@@ -421,130 +468,13 @@ public class World {
         public Position.Step direction() {
             return nextStep;
         }
-
-        /*// Find valid step that is not equal to step !
-        private Position.Step findValidStep(Position.Step step) {
-            Position.Step[] possibleSteps = randomSteps();
-            for (int i = 0; i < possibleSteps.length; i++) {
-                if (validStep(possibleSteps[i]) && !possibleSteps[i].equals(step)) {
-                    return possibleSteps[i];
-                }
-            }
-            return null;
-        }*/
-
-        /*
-
-        // Assumes that nextStep != null
-        private void determineNextStep() {
-            boolean nextStepValid = validStep(nextStep);
-            Position.Step potentialTurn = findValidStep(nextStep);
-            if (potentialTurn == null && !nextStepValid) {
-                nextStep = null;
-                return;
-            }
-            Position.Step oldStep = nextStep;
-            if (!nextStepValid) {
-                nextStep = potentialTurn;
-                takeTurn(oldStep);
-                return;
-            }
-            if (RANDOM.nextDouble() < likelyhoodOfRandomTurn) {
-                nextStep = potentialTurn;
-                takeTurn(oldStep);
-                return;
-            } else {
-                return;
-            }
-        }
-
-        // Interacts intimately with nextStepForHallway !!!
-        private boolean nextStepSafeForHallway() {
-            if (nextStep == null) {
-                return false;
-            }
-            // Check if you can merge the corridor with another corridor / room.
-            Position posInFront = Position.add(position, nextStep);
-            Position posTwoInFront = Position.add(posInFront, nextStep);
-            if (validPosition(posInFront) && validPosition(posTwoInFront) && isWallTile(grid[posInFront.x()][posInFront.y()]) &&orTile(grid[posTwoInFront.x()][posTwoInFront.y()])) {
-                setTileToFloor(position);
-                setTileToFloor(posInFront);
-                return false;
-            }
-
-            // Otherwise, if the current nextStep is valid, ...
-            if (StepSafeForHallway(nextStep)) {
-                // ... and the runner does not decide to randomly take a turn...
-                if (!justTookTurn && RANDOM.nextDouble() > likelyhoodOfRandomTurn) {
-                    // this function simply returns true, meaning the runner can go in the directio of nextStep.
-                    return true;
-                }
-            }
-            // Otherwise, the runner is (definitely (*)) going to take a turn.
-            justTookTurn = true;
-            Position.Step oldNextStep = nextStep;
-            Position.Step[] possbileSteps = randomSteps();
-            for (int stepI = 0; stepI < possbileSteps.length; stepI++) {
-                nextStep = possbileSteps[stepI];
-                //here we (also) make sure that the runner really changes direction now
-                if (!nextStep.equals(oldNextStep) && StepSafeForHallway(nextStep)) {
-                    fillThreeTilesBehind(oldNextStep);
-                    return true;
-                }
-            }
-            nextStep = null;
-            return false;
-        }
-
-        private void fillThreeTilesBehind(Position.Step direction) {
-            Position behind = Position.add(position, direction);
-            setTileToWall(behind);
-            Position.Step[] orthogonalSteps = direction.orthogonalSteps();
-            for (int neighborI = 0; neighborI < orthogonalSteps.length; neighborI++) {
-                Position neighbor = Position.add(behind, orthogonalSteps[neighborI]);
-                // Currently we may possibly create hallways that are at the edge of the screen - we should avoid this!
-                // As a side consequence, the following if-statement would then be unnecessary.
-                if (validPosition(neighbor)) {
-                    setTileToWall(neighbor);
-                }
-            }
-        }
-
-        // Determine whether the given step can be implemented!
-        private boolean StepSafeForHallway(Position.Step step) {
-            if (step == null) {
-                return false;
-            }
-            Position positionPlusTwoSteps = Position.add(position, step).add(step);
-            if (!validPosition(positionPlusTwoSteps)) {
-                return false;
-            }
-            if (!isBackgroundTile(grid[positionPlusTwoSteps.x()][positionPlusTwoSteps.y()])) {
-                return false;
-            }
-            return true;
-        }
-
-        // Interacts intimately with nextStepSafeForHallway !!!
-        private void nextStepForHallway() {
-            position.add(nextStep);
-            setTileToFloor(position);
-            stepsTaken++;
-            Position.Step[] orthogonalSteps = nextStep.orthogonalSteps();
-            for (int neighborI = 0; neighborI < orthogonalSteps.length; neighborI++) {
-                Position neighbor = Position.add(position, orthogonalSteps[neighborI]);
-
-                // Currently we may possibly create hallways that are at the edge of the screen - we should avoid this!
-                As a side consequence, the following if-statement would then be unnecessary.
-                if (validPosition(neighbor)) {
-                    setTileToWall(neighbor);
-                }
-            }
-            justTookTurn = false;
-        }
-         */
     }
 
+    private Position.Step[] randomSteps() {
+        Position.Step[] steps = Position.Steps.clone();
+        RandomUtils.shuffle(RANDOM, steps);
+        return steps;
+    }
     public void setTileToWall(Position position) {
         if (!validPosition(position)) {
             return;
