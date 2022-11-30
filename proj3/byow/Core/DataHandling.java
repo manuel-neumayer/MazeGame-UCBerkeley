@@ -49,7 +49,7 @@ public class DataHandling {
     }*/
 
     public static String turnGridToString(TETile[][] grid) {
-        String gridString = grid.length + "!" + grid[0].length + "!";
+        String gridString = RandomWrapper.seed() + "!" + RandomWrapper.callCount() + "!" + grid.length + "!" + grid[0].length + "!";
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
                 gridString += Tileset.tileToInteger.get(grid[i][j]) + ":";
@@ -60,8 +60,9 @@ public class DataHandling {
         return gridString;
     }
 
+    /* Sets up the RandomWrapper with the information provided in the string and creates the grid corresponding to the sgtring! */
     public static TETile[][] turnStringToGrid(String gridString) {
-        int[] dimensions = new int[2];
+        int[] dimensions = new int[4];
         char[] gridStringArray = gridString.toCharArray();
         int currentIndex = 0;
         for (int index = 0; index < dimensions.length; index++) {
@@ -74,7 +75,10 @@ public class DataHandling {
             dimensions[index] = dimension;
             currentIndex++;
         }
-        TETile[][] grid = new TETile[dimensions[0]][dimensions[1]];
+        long seed = (long) dimensions[0];
+        int callCount = dimensions[1];
+        RandomWrapper.setup(seed, callCount);
+        TETile[][] grid = new TETile[dimensions[2]][dimensions[3]];
         int i = 0;
         int j = 0;
         while (gridStringArray[currentIndex] != '*') {

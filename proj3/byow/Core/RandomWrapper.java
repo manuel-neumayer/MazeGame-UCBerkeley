@@ -12,6 +12,10 @@ public class RandomWrapper {
         setup(seed);
     }
 
+    public static String seed() {
+        return Integer.toString((int) SEED);
+    }
+
     public static void setup(long seed) {
         SEED = seed;
         RANDOM = new Random(seed);

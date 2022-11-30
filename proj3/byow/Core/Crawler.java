@@ -91,7 +91,7 @@ public class Crawler {
         return new Position(vertex % WIDTH, vertex / WIDTH);
     }
 
-    private Position randomPositionInInterior() {
+    public Position randomPositionInInterior() {
         Position position = new Position((int) (RandomWrapper.nextDouble() * WIDTH), (int) (RandomWrapper.nextDouble() * HEIGHT));
         while (!isInterior(position)) {
             position = new Position((int) (RandomWrapper.nextDouble() * WIDTH), (int) (RandomWrapper.nextDouble() * HEIGHT));

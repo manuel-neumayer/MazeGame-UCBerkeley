@@ -9,6 +9,7 @@ import java.io.FileWriter;   // Import the FileWriter class
 
 import byow.TileEngine.Tileset;
 import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdDraw;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,11 +20,52 @@ public class Engine {
     public static final int WIDTH = 80;
     public static final int HEIGHT = 30;
 
+    private TETile[][] grid;
+    private Player player;
+
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+        Menu menu = new Menu(40, 40);
+        String input = menu.startGame();
+        setupGame(input);
+        while (true) {
+            String input = gatherKeyInput();
+            if (input == ":") {
+                TETile[][] canvas = drawCanvas(grid.clone());
+                DataHandling.storeGrid(canvas);
+                StdDraw.pause(500);
+                break;
+            } else {
+                TETile[][] canvas = grid.clone();
+                player.move(input);
+                enemy.move();
+                ter.renderFrame(canvas);
+            }
+            draw(canvas);
+            StdDraw.pause(10);
+        }
+    }
+
+    private void draw(TETile[][] canvas) {
+        player.draw(canvas);
+        enemy.draw(canvas);
+    }
+
+    public void setupGame(String input) {
+        if (input == "l") {
+            grid = DataHandling.restoreGrid();
+        } else {
+            RandomWrapper.setup((long) Integer.parseInt(input));
+            World world = new World(90, 45);
+            world.setup();
+            grid = world.getGrid();
+        }
+        Crawler crawler = new Crawler(grid);
+        player = new Player(crawler.randomPositionInInterior());
+        enemy = new Enemy(crawler.randomPositionInInterior(), player);
     }
 
     /**
@@ -55,11 +97,26 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-        RandomWrapper.setup();
-        World world = new World(200, 200);
-        world.setup();
-        TETile[][] finalWorldFrame = world.getGrid();
-        return finalWorldFrame;
+        char[] charArray = input.toCharArray();
+        String firstLetter = "" + charArray[0];
+        String input = "";
+        int currentIndex = 1;
+        if (firstLetter.equalsIgnoreCase("N")) {
+            while (Menu.isNumeric(charArray[currentIndex])) {
+                input += charArray[currentIndex];
+                currentIndex++;
+            }
+            currentIndex++;
+        } else if (firstLetter.equalsIgnoreCase("L")) {
+            input = "L";
+        } else {
+            System.exit(0);
+        }
+        setupGrid(input);
+        while (currentIndex < charArray.length) {
+            String letter = "" + charArray[currentIndex];
+            player.move(letter);
+        }
     }
 
     public static void main(String[] args) {

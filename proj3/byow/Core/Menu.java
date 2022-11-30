@@ -67,8 +67,8 @@ public class Menu {
                     continue;
                 }
                 String secondInput = solicitSeed();
-                //Engine engine = new Engine();
-                //engine.interactWithInputString(secondInput);
+                Engine engine = new Engine();
+                engine.interactWithInputString(secondInput);
 
             } else if (firstInput.equalsIgnoreCase("L")) {
                 //load previous screen
