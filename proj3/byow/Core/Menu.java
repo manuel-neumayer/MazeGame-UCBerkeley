@@ -27,14 +27,28 @@ public class Menu {
     }
     public String solicitSeed(){
         String display = "";
-        while (StdDraw.hasNextKeyTyped() && !display.contains("S")) {
+        while (StdDraw.hasNextKeyTyped() ) {
             String e = String.valueOf(StdDraw.nextKeyTyped());
-            display += e;
+            if (e.equalsIgnoreCase("S")) {
+                break;
+            }
+            if (isNumeric(e)) {
+                display += e;
+            }
             drawFrame(display);
-            StdDraw.pause(800);
+            StdDraw.pause(500);
         }
         return display;
     }
+    public static boolean isNumeric(String s) {
+        try {
+            int d = Integer.parseInt(s);
+        } catch (NumberFormatException nfe) {
+            return false;
+    }
+        return true;
+    }
+
     public String solicitLetter(){
         String display = "";
         while (StdDraw.hasNextKeyTyped()) {
@@ -43,8 +57,9 @@ public class Menu {
         return display;
     }
 
-    public void drawMain() {
+    public String drawMain() {
         String firstInput;
+        String secondInput = null;
         if (startOfGame == true) {
             StdDraw.setPenColor(Color.WHITE);
             StdDraw.clear(Color.BLACK);
@@ -66,20 +81,21 @@ public class Menu {
                 while (!StdDraw.hasNextKeyTyped()) {
                     continue;
                 }
-                String secondInput = solicitSeed();
-                //Engine engine = new Engine();
-                //engine.interactWithInputString(secondInput);
+                secondInput = solicitSeed();
 
             } else if (firstInput.equalsIgnoreCase("L")) {
                 //load previous screen
                 drawFrame("");
+                secondInput = "L";
                 System.out.println("load previous");
             } else if (firstInput.equalsIgnoreCase("Q")) {
                 drawFrame("");
+                secondInput = "Q";
                 System.exit(0);
             }
 
         }
+        return secondInput;
 
     }
     public void drawTop(int num) {
@@ -124,16 +140,15 @@ public class Menu {
     }
 
 
-    public void startGame() {
+    public String startGame() {
         this.startOfGame = true;
-        drawMain();
+        return drawMain();
     }
 
     public static void main(String[] args) {
         Menu menu = new Menu(40, 40);
         menu.startGame();
     }
-
 
 
 }
