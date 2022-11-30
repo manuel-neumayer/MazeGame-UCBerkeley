@@ -13,13 +13,15 @@ public class Crawler {
     private int WIDTH;
     private int HEIGHT;
     private Graph graph;
-    TERenderer ter = new TERenderer();
+
+    private Dijkstra dijkstra;
+    //TERenderer ter = new TERenderer();
 
     public Graph getGraph() {
         return graph;
     }
 
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         //World world = new World(4695, 90, 45);
         //World world = new World(2562, 90, 45);
         RandomWrapper.setup();
@@ -46,7 +48,7 @@ public class Crawler {
         grid[targetPos.x()][targetPos.y()] = Tileset.TREE;
         grid[sourcePos.x()][sourcePos.y()] = Tileset.TREE;
         crawler.ter.renderFrame(grid);
-    }
+    }*/
 
     public Crawler(TETile[][] grid) {
         this.grid = grid;
@@ -54,8 +56,8 @@ public class Crawler {
         HEIGHT = grid[0].length;
         graph = new Graph(WIDTH * HEIGHT);
 
-        ter.initialize(WIDTH, HEIGHT);
-        ter.renderFrame(grid);
+        /*ter.initialize(WIDTH, HEIGHT);
+        ter.renderFrame(grid);*/
 
         Position startPosition = randomPositionInInterior();
         HashSet<Integer> closedPositions = new HashSet<>();
@@ -81,6 +83,13 @@ public class Crawler {
         }
 
         //ter.renderFrame(grid);
+
+        dijkstra = new Dijkstra(graph);
+    }
+
+    public Position nextPosition(Position source, Position target) {
+        int[] paths = dijkstra.shortestPath(getVertex(target));
+        return getPosition(paths[getVertex(source)]);
     }
 
     public int getVertex(Position position) {

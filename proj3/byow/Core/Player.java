@@ -4,7 +4,7 @@ import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
 public class Player {
-    private Position position;
+    public Position position;
     private TETile myBeautifulFace = Tileset.AVATAR;
 
     public Player(Position pos) {
@@ -43,7 +43,7 @@ public class Player {
 
     private boolean validMove(TETile[][] grid, Position.Step step) {
         Position newPos = Position.add(position, step);
-        TETile tile = grid[newPos.x()][newPos.y()]
+        TETile tile = grid[newPos.x()][newPos.y()];
         if (tile == Tileset.FLOWER ) {
             return true;
         } else {
