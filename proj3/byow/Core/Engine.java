@@ -40,7 +40,7 @@ public class Engine {
                 break;
             } else {
                 TETile[][] canvas = grid.clone();
-                player.move(input);
+                player.move(grid, input);
                 enemy.move();
                 ter.renderFrame(canvas);
             }
@@ -102,7 +102,7 @@ public class Engine {
         String input = "";
         int currentIndex = 1;
         if (firstLetter.equalsIgnoreCase("N")) {
-            while (Menu.isNumeric(charArray[currentIndex])) {
+            while (Menu.isNumeric(String.valueOf(charArray[currentIndex]))) {
                 input += charArray[currentIndex];
                 currentIndex++;
             }
