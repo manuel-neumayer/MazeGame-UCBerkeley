@@ -15,13 +15,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 public class Engine {
-    TERenderer ter = new TERenderer();
+    private TERenderer ter = new TERenderer();
     /* Feel free to change the width and height. */
     public static final int WIDTH = 80;
     public static final int HEIGHT = 30;
 
     private TETile[][] grid;
+    private Crawler crawler;
     private Player player;
+    private Enemy enemy;
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -31,27 +33,13 @@ public class Engine {
         Menu menu = new Menu(40, 40);
         String input = menu.startGame();
         setupGame(input);
-        while (true) {
-            String input = gatherKeyInput();
-            if (input == ":") {
-                TETile[][] canvas = drawCanvas(grid.clone());
-                DataHandling.storeGrid(canvas);
-                StdDraw.pause(500);
-                break;
-            } else {
-                TETile[][] canvas = grid.clone();
-                player.move(input);
-                enemy.move();
-                ter.renderFrame(canvas);
-            }
-            draw(canvas);
-            StdDraw.pause(10);
-        }
+        runGame();
     }
 
-    private void draw(TETile[][] canvas) {
+    private TETile[][] drawCanvas(TETile[][] canvas) {
         player.draw(canvas);
         enemy.draw(canvas);
+        return canvas;
     }
 
     public void setupGame(String input) {
@@ -63,7 +51,7 @@ public class Engine {
             world.setup();
             grid = world.getGrid();
         }
-        Crawler crawler = new Crawler(grid);
+        crawler = new Crawler(grid);
         player = new Player(crawler.randomPositionInInterior());
         enemy = new Enemy(crawler.randomPositionInInterior(), player);
     }
@@ -99,23 +87,46 @@ public class Engine {
         // that works for many different input types.
         char[] charArray = input.toCharArray();
         String firstLetter = "" + charArray[0];
-        String input = "";
+        String setupInput = "";
         int currentIndex = 1;
         if (firstLetter.equalsIgnoreCase("N")) {
-            while (Menu.isNumeric(charArray[currentIndex])) {
-                input += charArray[currentIndex];
+            String nextLetter = "" + charArray[currentIndex];
+            while (Menu.isNumeric(nextLetter)) {
+                setupInput += nextLetter;
                 currentIndex++;
             }
             currentIndex++;
         } else if (firstLetter.equalsIgnoreCase("L")) {
-            input = "L";
+            setupInput = "L";
         } else {
             System.exit(0);
         }
-        setupGrid(input);
+        setupGame(setupInput);
         while (currentIndex < charArray.length) {
             String letter = "" + charArray[currentIndex];
-            player.move(letter);
+            player.move(grid, letter);
+            enemy.move(crawler);
+        }
+        runGame();
+        return drawCanvas(grid.clone());
+    }
+
+    /* May only be called after everything has been set up! (grid + player + enemy) */
+    private void runGame() {
+        while (true) {
+            String input = gatherKeyInput();
+            if (input == ":") {
+                TETile[][] canvas = drawCanvas(grid.clone());
+                DataHandling.storeGrid(canvas);
+                StdDraw.pause(500);
+                System.exit(0);
+            } else {
+                player.move(grid, input);
+                enemy.move(crawler);
+                TETile[][] canvas = drawCanvas(grid.clone());
+                ter.renderFrame(canvas);
+                StdDraw.pause(10);
+            }
         }
     }
 

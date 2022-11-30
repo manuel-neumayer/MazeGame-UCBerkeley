@@ -14,16 +14,9 @@ public class Dijkstra {
     Graph graph;
     HashMap<Integer, int[]> vertexToPath;
 
-    TETile[][] grid;
-    TERenderer ter;
-
-    public Dijkstra(Graph graph, TETile[][] grid) {
+    public Dijkstra(Graph graph) {
         this.graph = graph;
         vertexToPath = new HashMap<>();
-        this.grid = grid;
-        ter = new TERenderer();
-        ter.initialize(grid.length, grid[0].length);
-        ter.renderFrame(grid);
     }
 
     public int[] shortestPath(int target) {

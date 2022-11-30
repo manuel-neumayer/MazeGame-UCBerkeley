@@ -4,7 +4,7 @@ import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
 public class Player {
-    private Position position;
+    public Position position;
     private TETile myBeautifulFace = Tileset.AVATAR;
 
     public Player(Position pos) {
