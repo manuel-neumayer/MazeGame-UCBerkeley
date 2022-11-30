@@ -1,7 +1,6 @@
 package byow.Core;
 
-import edu.princeton.cs.introcs.StdDraw;
-
+import edu.princeton.cs.algs4.StdDraw;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 
@@ -27,7 +26,10 @@ public class Menu {
     }
     public String solicitSeed(){
         String display = "";
-        while (StdDraw.hasNextKeyTyped() ) {
+        while (true) {
+            while (!StdDraw.hasNextKeyTyped())  {
+                StdDraw.pause(10);
+            }
             String e = String.valueOf(StdDraw.nextKeyTyped());
             if (e.equalsIgnoreCase("S")) {
                 break;
@@ -36,8 +38,8 @@ public class Menu {
                 display += e;
             }
             drawFrame(display);
-            StdDraw.pause(500);
         }
+        System.out.println(display);
         return display;
     }
     public static boolean isNumeric(String s) {
@@ -49,7 +51,7 @@ public class Menu {
         return true;
     }
 
-    public String solicitLetter(){
+    public static String solicitLetter(){
         String display = "";
         while (StdDraw.hasNextKeyTyped()) {
             display += StdDraw.nextKeyTyped();
@@ -78,7 +80,7 @@ public class Menu {
             if (firstInput.equalsIgnoreCase("N")) {
                 StdDraw.clear(Color.BLACK);
                 drawTop(3);
-                while (!StdDraw.hasNextKeyTyped()) {
+                /*while (!StdDraw.hasNextKeyTyped()) {
                     continue;
                 }
 
@@ -87,6 +89,7 @@ public class Menu {
                 engine.interactWithInputString(secondInput);*/
 
                 secondInput = solicitSeed();
+                System.out.println("this is secondInput" + secondInput);
 
 
             } else if (firstInput.equalsIgnoreCase("L")) {
@@ -148,13 +151,18 @@ public class Menu {
 
     public String startGame() {
         this.startOfGame = true;
-        return drawMain();
+        String answer = drawMain();
+        System.out.println("kffjg" + answer);
+        return answer;
     }
 
+    /*
     public static void main(String[] args) {
         Menu menu = new Menu(40, 40);
         menu.startGame();
     }
+
+     */
 
 
 }

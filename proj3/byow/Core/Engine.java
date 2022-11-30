@@ -30,8 +30,10 @@ public class Engine {
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+        System.out.println("heloooo");
         Menu menu = new Menu(40, 40);
         String input = menu.startGame();
+        System.out.println("input" + input);
         setupGame(input);
         runGame();
     }
@@ -54,6 +56,7 @@ public class Engine {
         crawler = new Crawler(grid);
         player = new Player(crawler.randomPositionInInterior());
         enemy = new Enemy(crawler.randomPositionInInterior(), player);
+        ter.initialize(grid.length, grid[0].length);
     }
 
     /**
@@ -128,6 +131,9 @@ public class Engine {
                 StdDraw.pause(10);
             }
         }
+    }
+    private String gatherKeyInput() {
+        return Menu.solicitLetter();
     }
 
     public static void main(String[] args) {
