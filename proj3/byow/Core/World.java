@@ -56,6 +56,7 @@ public class World {
         pauseTime = 0;
         ter = new TERenderer();
         ter.initialize(WIDTH, HEIGHT);
+        HUD h = new HUD(WIDTH, HEIGHT, getGrid());
         boolean notGoodEnough = true;
         while (notGoodEnough) {
             initializeGrid();
@@ -72,7 +73,26 @@ public class World {
             System.out.println("");
             //StdDraw.pause(1000);
         }
+
         ter.renderFrame(getGrid());
+        //need to continuously draw the same world so don't have to clear HUD
+
+        while(true) {
+            if (StdDraw.hasNextKeyTyped()) {
+                String typed = String.valueOf(StdDraw.nextKeyTyped());
+                if (typed.equals(":Q")) {
+                    //save
+                    System.exit(0);
+                } else {
+                    //move(typed) which checks if it's a legit request
+                }
+            } else {
+                h.checkAndDisplay(WIDTH, HEIGHT);
+            }
+        }
+        // check if mouse > width or height, or if mouse < 0, if so, write false into HUD
+        //needs to be in constant loop to constnatly check in with mouse until keyboard press
+
     }
 
     private boolean roomFits(LinkedList<LinkedList<Position>> room){
