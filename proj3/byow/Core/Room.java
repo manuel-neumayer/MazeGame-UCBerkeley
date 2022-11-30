@@ -12,19 +12,18 @@ public class Room {
     private int width;
     private int length;
     private LinkedList<LinkedList<Position>> positions;
-    private Random rand;
     private World world;
     public LinkedList<Position> newCorridors;
 
-    public Room(LinkedList<LinkedList<Position>> positions, Random rand, World world) {
-        this.rand = rand;
+    public Room(LinkedList<LinkedList<Position>> positions, World world) {
         this.world = world;
         newCorridors = new LinkedList<>();
         this.positions = positions;
         furnishRoom(positions);
         walledRoom(positions);
         int[] newCorridorSides = new int[]{0, 1, 2};
-        RandomUtils.shuffle(rand, newCorridorSides);
+        //RandomUtils.shuffle(rand, newCorridorSides);
+        RandomWrapper.shuffle(newCorridorSides);
         for (int i = 0; i < 3; i++) {
             addCorridor(newCorridorSides[i]);
         }
@@ -62,21 +61,21 @@ public class Room {
         if (i == 0) {
             // UP
             int size = positions.get(0).size();
-            Position newCorridor = positions.get(0).get(1 + (int) ((size - 3) * rand.nextDouble())); // size / 4 + (int) ((size / 2) * rand.nextDouble()));
+            Position newCorridor = positions.get(0).get(1 + (int) ((size - 3) * RandomWrapper.nextDouble())); // size / 4 + (int) ((size / 2) * rand.nextDouble()));
             newCorridors.push(newCorridor);
             world.setTileToFloor(newCorridor);
         }
         if (i == 1) {
             // DOWN
             int size = positions.get(0).size();
-            Position newCorridor = positions.get(positions.size() - 1).get(1 + (int) ((size - 3) * rand.nextDouble())); // size / 4 + (int) ((size / 2) * rand.nextDouble()));
+            Position newCorridor = positions.get(positions.size() - 1).get(1 + (int) ((size - 3) * RandomWrapper.nextDouble())); // size / 4 + (int) ((size / 2) * rand.nextDouble()));
             newCorridors.push(newCorridor);
             world.setTileToFloor(newCorridor);
         }
         if (i == 2) {
             // RIGHT
             int size = positions.size();
-            Position newCorridor = positions.get(1 + (int) ((size - 3) * rand.nextDouble())).get(positions.get(0).size() - 1);; // size / 4 + (int) ((size / 2) * rand.nextDouble())).get(positions.get(0).size() - 1);
+            Position newCorridor = positions.get(1 + (int) ((size - 3) * RandomWrapper.nextDouble())).get(positions.get(0).size() - 1);; // size / 4 + (int) ((size / 2) * rand.nextDouble())).get(positions.get(0).size() - 1);
             newCorridors.push(newCorridor);
             world.setTileToFloor(newCorridor);
         }
@@ -120,7 +119,7 @@ public class Room {
         int w = 0;
         for (int i = 0; i < 100; i += 1) {
             if (!checkWidth(w, p)) {
-                w = randomizeSize(seed);
+                w = (int) (500 * RandomWrapper.nextDouble());
             } else {
                 break;
             }
@@ -133,23 +132,12 @@ public class Room {
         int l = 0;
         for (int i = 0; i < 100; i += 1) {
             if (!checkLength(l, p)) {
-                l = randomizeSize(seed);
+                l = (int) (500 * RandomWrapper.nextDouble());
             } else {
                 break;
             }
         }
         return l;
-
-
-    }
-
-
-    private int randomizeSize(Long seed){
-        int result = rand.nextInt();
-        while (result == 0) {
-            result = rand.nextInt();
-        }
-        return result;
     }
     private boolean checkWidth(int wi, Position pos) {
         TETile[][] g = world.getGrid();

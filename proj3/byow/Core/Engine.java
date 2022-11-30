@@ -3,6 +3,16 @@ package byow.Core;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 
+import java.io.File;  // Import the File class
+import java.io.IOException;  // Import the IOException class to handle errors
+import java.io.FileWriter;   // Import the FileWriter class
+
+import byow.TileEngine.Tileset;
+import edu.princeton.cs.algs4.In;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 public class Engine {
     TERenderer ter = new TERenderer();
     /* Feel free to change the width and height. */
@@ -45,11 +55,20 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-        World world = new World((long) 49593, 200, 200);
+        RandomWrapper.setup();
+        World world = new World(200, 200);
         world.setup();
         TETile[][] finalWorldFrame = world.getGrid();
         return finalWorldFrame;
     }
 
+    public static void main(String[] args) {
+        World world = new World();
+        DataHandling.setup();
+        TETile[][] grid = new TETile[][]{new TETile[]{Tileset.NOTHING}};
+        DataHandling.storeGrid(grid);
+        TETile[][] grid1 = DataHandling.restoreGrid();
+        System.out.println(DataHandling.turnGridToString(grid1));
+    }
 
 }

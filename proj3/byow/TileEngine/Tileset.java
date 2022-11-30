@@ -1,6 +1,10 @@
 package byow.TileEngine;
 
 import java.awt.Color;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Contains constant tile objects, to avoid having to remake the same tiles in different parts of
@@ -33,6 +37,33 @@ public class Tileset {
     public static final TETile SAND = new TETile('▒', Color.yellow, Color.black, "sand");
     public static final TETile MOUNTAIN = new TETile('▲', Color.gray, Color.black, "mountain");
     public static final TETile TREE = new TETile('♠', Color.green, Color.black, "tree");
+
+    public static HashMap<Integer, TETile> integerToTile = new HashMap<>();
+    public static HashMap<TETile, Integer> tileToInteger = new HashMap<>();
+    private static int alphabetKey = 0;
+
+    public static void setupTileAlphabet() {
+        addTileToAlphabet(AVATAR);
+        addTileToAlphabet(WALL);
+        addTileToAlphabet(FLOOR);
+        addTileToAlphabet(NOTHING);
+        addTileToAlphabet(GRASS);
+        addTileToAlphabet(WATER);
+        addTileToAlphabet(FLOWER);
+        addTileToAlphabet(LOCKED_DOOR);
+        addTileToAlphabet(UNLOCKED_DOOR);
+        addTileToAlphabet(SAND);
+        addTileToAlphabet(MOUNTAIN);
+        addTileToAlphabet(TREE);
+    }
+
+    public static void addTileToAlphabet(TETile tile) {
+        if (tileToInteger.containsKey(tile)) {
+            return;
+        }
+        tileToInteger.put(tile, alphabetKey);
+        integerToTile.put(alphabetKey, tile);
+        alphabetKey++;
+    }
+
 }
-
-

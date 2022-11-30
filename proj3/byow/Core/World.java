@@ -1,13 +1,10 @@
 package byow.Core;
 
-import byow.InputDemo.InputSource;
-import byow.InputDemo.RandomInputSource;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 import edu.princeton.cs.introcs.StdDraw;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -15,9 +12,6 @@ public class World {
 
     private int WIDTH;
     private int HEIGHT;
-
-    private long SEED;
-    private Random RANDOM;
 
     private double randomTurnProbability = 0.35;
     private TETile[][] grid;
@@ -42,18 +36,19 @@ public class World {
 
     /* Another potential metric, besides counting created rooms, is using a heuristic to guess how many rooms could still be placed after the algorithm finished.
     * I.e., place 100 rooms of reasonable size randomly and see how many could actually be placed. The larger the number, the more work is to be done. */
-    public World(long seed, int width, int height) {
+    public World(int width, int height) {
         WIDTH = width;
         HEIGHT = height;
-        SEED = seed;
-        RANDOM = new Random(seed);
+    }
+
+    public World() {
+        WIDTH = 90;
+        HEIGHT = 45;
     }
 
     public static void main(String[] args) {
-        long seed = (long) (100000 * Math.random());
-        //long seed = 83896;//87929; //58822;//70175;// 56315; 64198
-        System.out.println("Seed: " + seed);
-        World world = new World(seed, 90, 45);
+        RandomWrapper.setup();
+        World world = new World(90, 45);
         world.setup();
     }
 
@@ -66,7 +61,6 @@ public class World {
             initializeGrid();
             Room firstRoom = placeRoom(new Position((int) (WIDTH / 2), (int) (HEIGHT / 2)), Position.Up);
             runFromRoom(firstRoom);
-            ter.renderFrame(getGrid());
             notGoodEnough = false;
             for (int i = 0; i < 5; i++) {
                 int heuristic = heuristicForEmptinessOfGrid();
@@ -76,8 +70,9 @@ public class World {
                 }
             }
             System.out.println("");
-            StdDraw.pause(1000);
+            //StdDraw.pause(1000);
         }
+        ter.renderFrame(getGrid());
     }
 
     private boolean roomFits(LinkedList<LinkedList<Position>> room){
@@ -101,20 +96,20 @@ public class World {
         for (int i = 0; i < 100; i++) {
             positions = roomOfRandomDimensions(position, direction);
             if (roomFits(positions)) {
-                return new Room(positions, RANDOM, this);
+                return new Room(positions, this);
             }
         }
         positions = getPotentialPositions(position, direction, 1, 1, 3);
         if (roomFits(positions)) {
-            return new Room(positions, RANDOM, this);
+            return new Room(positions, this);
         }
         return null;
     }
 
     private LinkedList<LinkedList<Position>> roomOfRandomDimensions(Position position, Position.Step direction) {
-        int l1 = minL + (int) (randomComponentL * RANDOM.nextDouble());
-        int l2 = minL + (int) (randomComponentL * RANDOM.nextDouble());
-        int w = minW + (int) (randomComponentW * RANDOM.nextDouble());
+        int l1 = minL + (int) (randomComponentL * RandomWrapper.nextDouble());
+        int l2 = minL + (int) (randomComponentL * RandomWrapper.nextDouble());
+        int w = minW + (int) (randomComponentW * RandomWrapper.nextDouble());
         return getPotentialPositions(position, direction, l1, l2, w);
     }
 
@@ -132,7 +127,7 @@ public class World {
     }
 
     private Position.Step randomStep() {
-        return Position.Steps[(int) (Position.Steps.length * RANDOM.nextDouble())];
+        return Position.Steps[(int) (Position.Steps.length * RandomWrapper.nextDouble())];
     }
     private LinkedList<LinkedList<Position>> getPotentialPositions(Position position, Position.Step direction, int l1, int l2, int w) {
         LinkedList<LinkedList<Position>> positions = new LinkedList<>();
@@ -197,7 +192,7 @@ public class World {
     }
 
     private int randomCorridorLength() {
-        return corridorLengthMin + (int) (corridorLengthRandomComponent * RANDOM.nextDouble());
+        return corridorLengthMin + (int) (corridorLengthRandomComponent * RandomWrapper.nextDouble());
     }
     public int WIDTH() {
         return WIDTH;
@@ -209,9 +204,9 @@ public class World {
 
     /* Returns a random position on the screen! */
     private Position randomPosition() {
-        Position pos = new Position((int) (RANDOM.nextDouble() * WIDTH), (int) (RANDOM.nextDouble() * HEIGHT));
+        Position pos = new Position((int) (RandomWrapper.nextDouble() * WIDTH), (int) (RandomWrapper.nextDouble() * HEIGHT));
         while (!isBackground(pos)) {
-            pos = new Position((int) (RANDOM.nextDouble() * WIDTH), (int) (RANDOM.nextDouble() * HEIGHT));
+            pos = new Position((int) (RandomWrapper.nextDouble() * WIDTH), (int) (RandomWrapper.nextDouble() * HEIGHT));
         }
         return pos;
     }
@@ -285,7 +280,7 @@ public class World {
                         currentDirection = potentialTurn;
                     }
                 } else {
-                    if (RANDOM.nextDouble() < likelyhoodOfRandomTurn) {
+                    if (RandomWrapper.nextDouble() < likelyhoodOfRandomTurn) {
                         if (isMerge(position, potentialTurn)) {
                             takeTurn(currentDirection, potentialTurn);
                             merge(potentialTurn);
@@ -472,7 +467,7 @@ public class World {
 
     private Position.Step[] randomSteps() {
         Position.Step[] steps = Position.Steps.clone();
-        RandomUtils.shuffle(RANDOM, steps);
+        RandomWrapper.shuffle(steps);
         return steps;
     }
     public void setTileToWall(Position position) {
@@ -496,15 +491,15 @@ public class World {
         grid[position.x()][position.y()] = Tileset.NOTHING;
     }
 
-    private boolean isBackgroundTile(TETile tile) {
+    public static boolean isBackgroundTile(TETile tile) {
         return tile == Tileset.NOTHING;
     }
 
-    private boolean isFloorTile(TETile tile) {
+    public static boolean isFloorTile(TETile tile) {
         return tile == Tileset.FLOWER;
     }
 
-    private boolean isWallTile(TETile tile) {
+    public static boolean isWallTile(TETile tile) {
         return tile == Tileset.WALL;
     }
 
