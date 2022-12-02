@@ -109,6 +109,9 @@ public class Crawler {
     }
 
     private boolean isInterior(Position position) {
+        if (position.x() < 0 || position.x() >= grid.length || position.y() < 0 || position.y() >= grid[0].length) {
+            return false;
+        }
         return isInterior(grid[position.x()][position.y()]);
     }
 

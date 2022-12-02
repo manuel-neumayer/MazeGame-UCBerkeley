@@ -17,13 +17,15 @@ import java.util.*;
 public class Engine {
     private TERenderer ter = new TERenderer();
     /* Feel free to change the width and height. */
-    public static final int WIDTH = 80;
-    public static final int HEIGHT = 30;
+    public static final int WIDTH = 88;
+    public static final int HEIGHT = 44;
 
     private TETile[][] grid;
     private Crawler crawler;
     private Player player;
     private Enemy enemy;
+    private HUD hud;
+    private boolean showPath = true;
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -40,23 +42,61 @@ public class Engine {
 
     private TETile[][] drawCanvas(TETile[][] canvas) {
         player.draw(canvas);
+        if (showPath) {
+            enemy.drawPath(canvas);
+        }
         enemy.draw(canvas);
         return canvas;
     }
 
+    private Position findTile(TETile[][] grid, TETile tile) {
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
+                if (grid[i][j] == tile) {
+                    return new Position(i, j);
+                }
+            }
+        }
+        return null;
+    }
+
+    private void clearGrid(TETile[][] grid) {
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
+                if (grid[i][j] == Tileset.SAND) {
+                    grid[i][j] = Tileset.FLOWER;
+                }
+                if (grid[i][j] == Tileset.AVATAR) {
+                    grid[i][j] = Tileset.FLOWER;
+                }
+                if (grid[i][j] == Tileset.MOUNTAIN) {
+                    grid[i][j] = Tileset.FLOWER;
+                }
+            }
+        }
+    }
+
     public void setupGame(String input) {
-        if (input == "l") {
+        Tileset.setupTileAlphabet();
+        if (input.equalsIgnoreCase("L")) {
             grid = DataHandling.restoreGrid();
+            Position playerPos = findTile(grid, Tileset.AVATAR);
+            Position enemyPos = findTile(grid, Tileset.SAND);
+            clearGrid(grid);
+            crawler = new Crawler(grid);
+            player = new Player(playerPos);
+            enemy = new Enemy(enemyPos, player, crawler);
         } else {
             RandomWrapper.setup((long) Integer.parseInt(input));
-            World world = new World(90, 45);
+            World world = new World(WIDTH, HEIGHT);
             world.setup();
             grid = world.getGrid();
+            crawler = new Crawler(grid);
+            player = new Player(crawler.randomPositionInInterior());
+            enemy = new Enemy(crawler.randomPositionInInterior(), player, crawler);
         }
-        crawler = new Crawler(grid);
-        player = new Player(crawler.randomPositionInInterior());
-        enemy = new Enemy(crawler.randomPositionInInterior(), player);
-        ter.initialize(grid.length, grid[0].length);
+        ter.initialize(WIDTH, HEIGHT + 2, 0, 2);
+        hud = new HUD(WIDTH, HEIGHT, grid);
     }
 
     /**
@@ -108,27 +148,34 @@ public class Engine {
         while (currentIndex < charArray.length) {
             String letter = "" + charArray[currentIndex];
             player.move(grid, letter);
-            enemy.move(crawler);
+            enemy.move();
         }
         runGame();
-        return drawCanvas(grid.clone());
+        return drawCanvas(cloneGrid(grid));
     }
 
     /* May only be called after everything has been set up! (grid + player + enemy) */
     private void runGame() {
         while (true) {
             String input = gatherKeyInput();
-            if (input == ":") {
-                TETile[][] canvas = drawCanvas(grid.clone());
+            if (input.equals(".")) {
+                TETile[][] canvas = drawCanvas(cloneGrid(grid));
                 DataHandling.storeGrid(canvas);
                 StdDraw.pause(500);
                 System.exit(0);
             } else {
                 player.move(grid, input);
-                enemy.move(crawler);
-                TETile[][] canvas = drawCanvas(grid.clone());
+                enemy.move();
+                TETile[][] canvas = drawCanvas(cloneGrid(grid));
                 ter.renderFrame(canvas);
+                hud.mouseLocation();
+                hud.checkAndDisplay(WIDTH, HEIGHT);
                 StdDraw.pause(10);
+            }
+            if (player.position.equals(enemy.position)) {
+                /* create endgame and call the endgame function */
+                StdDraw.pause(2000);
+                System.exit(0);
             }
         }
     }
@@ -143,6 +190,16 @@ public class Engine {
         DataHandling.storeGrid(grid);
         TETile[][] grid1 = DataHandling.restoreGrid();
         System.out.println(DataHandling.turnGridToString(grid1));
+    }
+
+    private TETile[][] cloneGrid(TETile[][] grid) {
+        TETile[][] clone = new TETile[grid.length][grid[0].length];
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
+                clone[i][j] = grid[i][j];
+            }
+        }
+        return clone;
     }
 
 }
