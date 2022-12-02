@@ -81,7 +81,7 @@ public class DataHandling {
         TETile[][] grid = new TETile[dimensions[2]][dimensions[3]];
         int i = 0;
         int j = 0;
-        while (gridStringArray[currentIndex] != '*') {
+        while (!(gridStringArray[currentIndex] == '*')) {
             String tileIntegerAsString = "";
             while (gridStringArray[currentIndex] != ':') {
                 tileIntegerAsString += gridStringArray[currentIndex];
@@ -89,7 +89,7 @@ public class DataHandling {
             }
             Integer tileInteger = Integer.parseInt(tileIntegerAsString);
             TETile tile = Tileset.integerToTile.get(tileInteger);
-            grid[i][j] = tile;
+            grid[j][i] = tile;
             currentIndex++;
             i++;
             if (gridStringArray[currentIndex] == '&') {

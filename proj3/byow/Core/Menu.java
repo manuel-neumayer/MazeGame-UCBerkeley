@@ -69,7 +69,7 @@ public class Menu {
             Font fontSmallest = new Font("Monaco", Font.BOLD, 8);
             StdDraw.setFont(fontSmallest);
             drawTop(1);
-            StdDraw.pause(2000);
+            StdDraw.pause(500);
             StdDraw.clear(Color.BLACK);
             drawNLQ();
             drawTop(2);
