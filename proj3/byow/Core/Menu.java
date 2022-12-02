@@ -155,6 +155,9 @@ public class Menu {
         System.out.println("kffjg" + answer);
         return answer;
     }
+    public void endGame() {
+        startOfGame = false;
+    }
 
     /*
     public static void main(String[] args) {
