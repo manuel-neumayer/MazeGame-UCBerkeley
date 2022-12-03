@@ -174,8 +174,8 @@ public class Engine {
             }
             if (player.position.equals(enemy.position)) {
                 /* create endgame and call the endgame function */
-                StdDraw.pause(2000);
-                System.exit(0);
+                //StdDraw.pause(2000);
+                //System.exit(0);
             }
         }
     }

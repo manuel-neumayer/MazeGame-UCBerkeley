@@ -8,19 +8,14 @@ import edu.princeton.cs.algs4.StdDraw;
 import java.awt.*;
 
 public class HUD {
-    int mouseY;
-    int mouseX;
-    Position p;
     int h;
     int w;
     TETile[][] world;
 
     public Position mouseLocation() {
-        Point p = MouseInfo.getPointerInfo().getLocation();
-        int x = Math.round(mouseX);
-        int y = Math.round(mouseY);
-        System.out.println(p.x + ", " + p.y);
-        return new Position(0,0);
+        int x = (int) (StdDraw.mouseX());
+        int y = (int) ((StdDraw.mouseY() - 2));
+        return new Position(x, y);
     }
     public HUD(int width, int height, TETile[][] wor){
         this.world = wor;
@@ -39,7 +34,7 @@ public class HUD {
         //drawFrame("");
         String text;
         Position p = mouseLocation();
-        if (p.y() > height || p.x() > width || p.x() < 0 || p.y() < 0) {
+        if (p.y() >= height || p.x() >= width || p.x() < 0 || p.y() < 0) {
             text = displayNothing();
         } else {
             text = displayTile(p);
