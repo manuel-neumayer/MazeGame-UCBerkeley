@@ -23,7 +23,10 @@ public class Engine {
     private TETile[][] grid;
     private Crawler crawler;
     private Player player;
-    private Enemy enemy;
+    private Enemy enemy1;
+    private Enemy enemy2;
+    private Enemy enemy3;
+
     private HUD hud;
     private boolean showPath = true;
 
@@ -43,9 +46,14 @@ public class Engine {
     private TETile[][] drawCanvas(TETile[][] canvas) {
         player.draw(canvas);
         if (showPath) {
-            enemy.drawPath(canvas);
+            enemy1.drawPath(canvas);
+            enemy2.drawPath(canvas);
+            enemy3.drawPath(canvas);
+
         }
-        enemy.draw(canvas);
+        enemy1.draw(canvas);
+        enemy2.draw(canvas);
+        enemy3.draw(canvas);
         return canvas;
     }
 
@@ -53,6 +61,7 @@ public class Engine {
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
                 if (grid[i][j] == tile) {
+                    grid[i][j] = Tileset.FLOWER;
                     return new Position(i, j);
                 }
             }
@@ -81,11 +90,16 @@ public class Engine {
         if (input.equalsIgnoreCase("L")) {
             grid = DataHandling.restoreGrid();
             Position playerPos = findTile(grid, Tileset.AVATAR);
-            Position enemyPos = findTile(grid, Tileset.SAND);
+            Position enemyPos1 = findTile(grid, Tileset.SAND);
+            Position enemyPos2 = findTile(grid, Tileset.SAND);
+            Position enemyPos3 = findTile(grid, Tileset.SAND);
             clearGrid(grid);
             crawler = new Crawler(grid);
             player = new Player(playerPos);
-            enemy = new Enemy(enemyPos, player, crawler);
+            enemy1 = new Enemy(enemyPos1, player, crawler);
+            enemy2 = new Enemy(enemyPos2, player, crawler);
+            enemy3 = new Enemy(enemyPos3, player, crawler);
+
         } else {
             RandomWrapper.setup((long) Integer.parseInt(input));
             World world = new World(WIDTH, HEIGHT);
@@ -93,10 +107,21 @@ public class Engine {
             grid = world.getGrid();
             crawler = new Crawler(grid);
             player = new Player(crawler.randomPositionInInterior());
-            enemy = new Enemy(crawler.randomPositionInInterior(), player, crawler);
+            enemy1 = new Enemy(crawler.randomPositionInInterior(), player, crawler);
+            enemy2 = new Enemy(crawler.randomPositionInInterior(), player, crawler);
+            enemy3 = new Enemy(crawler.randomPositionInInterior(), player, crawler);
         }
         ter.initialize(WIDTH, HEIGHT + 2, 0, 2);
         hud = new HUD(WIDTH, HEIGHT, grid);
+    }
+
+    public Position randomPositionInInterior() {
+        Position position = new Position((int) (RandomWrapper.nextDouble() * WIDTH), (int) (RandomWrapper.nextDouble() * HEIGHT));
+        while (grid[position.x()][position.y()] == Tileset.FLOOR || position.isTaken()) {
+            position = new Position((int) (RandomWrapper.nextDouble() * WIDTH), (int) (RandomWrapper.nextDouble() * HEIGHT));
+        }
+        position.take();
+        return position;
     }
 
     /**
@@ -148,7 +173,10 @@ public class Engine {
         while (currentIndex < charArray.length) {
             String letter = "" + charArray[currentIndex];
             player.move(grid, letter);
-            enemy.move();
+            enemy1.move();
+            enemy2.move();
+            enemy3.move();
+
         }
         runGame();
         return drawCanvas(cloneGrid(grid));
@@ -165,17 +193,20 @@ public class Engine {
                 System.exit(0);
             } else {
                 player.move(grid, input);
-                enemy.move();
+                enemy1.move();
+                enemy2.move();
+                enemy3.move();
                 TETile[][] canvas = drawCanvas(cloneGrid(grid));
                 ter.renderFrame(canvas);
                 hud.mouseLocation();
                 hud.checkAndDisplay(WIDTH, HEIGHT);
                 StdDraw.pause(10);
             }
-            if (player.position.equals(enemy.position)) {
-                /* create endgame and call the endgame function */
-                //StdDraw.pause(2000);
-                //System.exit(0);
+            if (player.position.equals(enemy1.position) || player.position.equals(enemy2.position) || player.position.equals(enemy3.position)) {
+                GameOver over = new GameOver(WIDTH, HEIGHT);
+                over.endGame();
+                StdDraw.pause(5000);
+                System.exit(0);
             }
         }
     }

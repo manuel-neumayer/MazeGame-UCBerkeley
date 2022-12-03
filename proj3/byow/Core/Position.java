@@ -1,6 +1,7 @@
 package byow.Core;
 
 class Position {
+    public static boolean taken = false;
     public static Step Up = new Step(0, 1);
     public static Step Down = new Step(0, -1);
     public static Step Left = new Step(-1, 0);
@@ -18,6 +19,16 @@ class Position {
                 positionGrid[i][j] = new Position(i, j);
             }
         }
+    }
+    public void release() {
+        this.taken = false;
+    }
+
+    public void take() {
+        this.taken = true;
+    }
+    public boolean isTaken() {
+        return (this.taken);
     }
 
     public static Position getReferencePosition(Position position) {
