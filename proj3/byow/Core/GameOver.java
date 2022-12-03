@@ -19,13 +19,19 @@ public class GameOver {
 
         }
         public void drawEnd() {
+            StdDraw.setPenColor(Color.WHITE);
+            StdDraw.clear(Color.BLACK);
             Font fontBig = new Font("Monaco", Font.BOLD, 30);
             StdDraw.setFont(fontBig);
             StdDraw.text(this.width / 2, this.height / 2, "GAME OVER: You were caught...");
             StdDraw.show();
         }
-    public void endGame(Menu men) {
-        men.endGame();
+    public void endGame() {
         drawEnd();
+    }
+
+    public static void main(String[] args) {
+        GameOver menu = new GameOver(40, 40);
+        menu.endGame();
     }
 }
